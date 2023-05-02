@@ -1,0 +1,136 @@
+﻿<Window x:Class="MeBrowser.View.DialogView"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:MeBrowser.View"
+        mc:Ignorable="d"
+        WindowStartupLocation="CenterOwner"
+        Title="{Binding Title}" 
+        MinHeight="200"
+        MinWidth="400"
+        MaxWidth="600"  
+        ResizeMode="NoResize"
+        RenderOptions.BitmapScalingMode="HighQuality" 
+        SizeToContent="WidthAndHeight"
+        xmlns:vm="clr-namespace:MeBrowser.ViewModel"
+        xmlns:m="clr-namespace:MeBrowser.Model"
+        xmlns:md="http://materialdesigninxaml.net/winfx/xaml/themes"  
+        xmlns:b="http://schemas.microsoft.com/xaml/behaviors"
+        xmlns:h="clr-namespace:MeBrowser.Helpers"
+        TextElement.Foreground="{DynamicResource MaterialDesignBody}"
+        TextElement.FontWeight="Regular"
+        TextElement.FontSize="16"
+        TextOptions.TextFormattingMode="Ideal"
+        TextOptions.TextRenderingMode="Auto"
+        Background="{DynamicResource MaterialDesignPaper}"
+        FontFamily="{DynamicResource MaterialDesignFont}"
+        Style="{StaticResource Window.CustomTitleBarStyle}" 
+        d:DataContext="{x:Static vm:DialogBox.Default}"
+        x:Name="dialog"
+        h:AttachedManager.CornerRadius="20">
+    <x:Code>
+        <![CDATA[
+            public DialogView()
+            {
+                InitializeComponent();
+            }
+        ]]>
+    </x:Code>
+    <Window.Resources>
+        <Style TargetType="Button" BasedOn="{StaticResource MaterialDesignRaisedButton}">
+            <Setter Property="Foreground" Value="{DynamicResource White.Dark}"/>
+            <Setter Property="FontSize" Value="20"/>
+            <Setter Property="Width" Value="120"/>
+            <Setter Property="Height" Value="30"/>
+            <Setter Property="FontFamily" Value="{DynamicResource MaterialDesignFont}"/> 
+            <Setter Property="Margin" Value="0 10 20 10"/>
+        </Style> 
+    </Window.Resources>
+    <DockPanel>
+        <Border DockPanel.Dock="Top" 
+                VerticalAlignment="Top" 
+                Background="{Binding ElementName=dialog, Path=BorderBrush}" 
+                CornerRadius="15 15 0 0" Margin="-0.5">
+            <b:Interaction.Triggers>
+                <b:EventTrigger EventName="MouseDown">
+                    <b:InvokeCommandAction Command="{Binding DragMove}"/>
+                </b:EventTrigger>
+            </b:Interaction.Triggers>
+            <Grid >
+                <Button IsCancel="True" 
+                            Width="30" 
+                            Height="30"
+                        Foreground="{DynamicResource White.Dark}" 
+                            HorizontalAlignment="Right"
+                        VerticalAlignment="Top"
+                            Style="{StaticResource MaterialDesignFloatingActionMiniButton}"
+                            Content="{md:PackIcon Kind=Power, Size=25}" 
+                            Command="{Binding CloseDialog}" 
+                            Margin="5"/>
+                <Image x:Name="imageIcon" Source="pack://siteoforigin:,,,/Images/icon.png" HorizontalAlignment="Left" Height="40" Margin="5"/>
+                <TextBlock Text="{Binding ElementName=dialog, Path=Title}" 
+                           FontSize="20"
+                           HorizontalAlignment="Center" 
+                           VerticalAlignment="Center"
+                           Foreground="{DynamicResource White.Dark}"
+                           MaxWidth="500"
+                           TextTrimming="CharacterEllipsis"
+                           Margin="50 0 50 0"/>
+            </Grid>
+        </Border>
+        <Border DockPanel.Dock="Bottom" Background="{StaticResource MaterialDesignTextFieldBoxBackground}" CornerRadius="0 0 15 15">
+            <DockPanel LastChildFill="False">
+                <Button DockPanel.Dock="Right" Visibility="{Binding CancelVisibility}" Command="{Binding SendResult}" CommandParameter="{x:Static m:DialogBoxResult.Cancel}">Cancel</Button>
+                <Button DockPanel.Dock="Right" Visibility="{Binding NoVisibility}" Command="{Binding SendResult}" CommandParameter="{x:Static m:DialogBoxResult.No}">No</Button>
+                <Button DockPanel.Dock="Right" Visibility="{Binding YesVisibility}" IsDefault="True" Command="{Binding SendResult}" CommandParameter="{x:Static m:DialogBoxResult.Yes}">Yes</Button>
+                <Button DockPanel.Dock="Right" Visibility="{Binding OkVisibility}" IsDefault="True" Command="{Binding SendResult}" CommandParameter="{x:Static m:DialogBoxResult.OK}">
+                    <Button.Content>
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock>OK</TextBlock>
+                            <TextBlock Text="{Binding ElementName=dialog, Path=(h:AttachedManager.StringValue)}" Foreground="{StaticResource DangerSolid}"/>
+                        </StackPanel>
+                    </Button.Content>
+                </Button>
+            </DockPanel>
+        </Border>
+        <Grid Margin="10 5 5 5">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition />
+            </Grid.ColumnDefinitions>
+            <Border Visibility="{Binding InfoVisibility}" Width="60" Height="60" CornerRadius="30" Background="{StaticResource AzureGradient}" Margin="5">
+                <Border Width="57" Height="57" CornerRadius="28.5" BorderThickness="2" BorderBrush="WhiteSmoke">
+                    <TextBlock FontSize="40" FontWeight="Bold" Foreground="{StaticResource BlueGradient}" VerticalAlignment="Center" HorizontalAlignment="Center" FontFamily="Cascadia Mono">i</TextBlock>
+                </Border>
+            </Border>
+            <Border Visibility="{Binding ErrorVisibility}" Width="60" Height="60" CornerRadius="30" Background="{StaticResource DangerSolid}"  Margin="5">
+                <Border Width="57" Height="57" CornerRadius="28.5" BorderThickness="2" BorderBrush="WhiteSmoke" >
+                    <TextBlock FontSize="40" FontWeight="Bold" Foreground="WhiteSmoke" VerticalAlignment="Center" HorizontalAlignment="Center" FontFamily="Segoe Print">X</TextBlock>
+                </Border>
+            </Border>
+            <Border Visibility="{Binding WarningVisibility}" Width="60" Height="60" Margin="5">
+                <Grid >
+                    <Path Data="M 2 42
+                          L 26 3 
+                          A 5 5 0 0 1 34 3 
+                          L 58 42 
+                          A 5 5 0 0 1 54 50
+                          L 6 50
+                          A 5 5 0 0 1 2 42
+                          Z" 
+                          Fill="{StaticResource YellowGradient}" 
+                          Stroke="{StaticResource DangerSolid}"
+                          StrokeThickness="2"/>
+                    <TextBlock FontSize="40" FontWeight="Bold" Foreground="White" VerticalAlignment="Center" HorizontalAlignment="Center" FontFamily="Arial Rounded MT Bold">!</TextBlock>
+                </Grid>
+            </Border>
+            <Border Visibility="{Binding QuestionVisibility}" Width="60" Height="60" CornerRadius="30" Background="{StaticResource AzureGradient}" Margin="5">
+                <Border Width="57" Height="57" CornerRadius="28.5" BorderThickness="2" BorderBrush="WhiteSmoke">
+                    <TextBlock FontSize="40" FontWeight="Bold" Foreground="{StaticResource BlueGradient}" VerticalAlignment="Center" HorizontalAlignment="Center" FontFamily="Cascadia Mono">?</TextBlock>
+                </Border>
+            </Border>
+            <Label x:Name="lab" Grid.Column="1" Content="{Binding Message}" Foreground="{DynamicResource Primary.Dark}" FontFamily="{DynamicResource MaterialDesignFont}" FontSize="20" VerticalAlignment="Center" Padding="5" Margin="5"/>
+        </Grid>
+    </DockPanel>
+</Window>

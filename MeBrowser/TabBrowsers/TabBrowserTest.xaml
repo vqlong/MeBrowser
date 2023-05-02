@@ -1,0 +1,97 @@
+﻿<TabItem x:Class="MeBrowser.TabBrowsers.TabBrowserTest"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:MeBrowser.TabBrowsers"
+             xmlns:behaviors="clr-namespace:MeBrowser.Behaviors"
+             xmlns:cef="clr-namespace:CefSharp.Wpf;assembly=CefSharp.Wpf"
+             xmlns:b="http://schemas.microsoft.com/xaml/behaviors"
+             xmlns:md="http://materialdesigninxaml.net/winfx/xaml/themes"
+             xmlns:vm="clr-namespace:MeBrowser.ViewModel"
+             xmlns:converters="clr-namespace:MeBrowser.Converters"
+             xmlns:m="clr-namespace:MeBrowser.Model"
+             xmlns:sys="clr-namespace:System;assembly=System.Runtime" 
+             xmlns:PresentationOptions="http://schemas.microsoft.com/winfx/2006/xaml/presentation/options"
+             mc:Ignorable="d PresentationOptions"  
+             d:DesignHeight="800" d:DesignWidth="1200" 
+             x:Name="tabBrowserChromium"
+         Style="{StaticResource TabItem.BrowserStyle}">
+    <TabItem.Header>
+        <DockPanel x:Name="dockHeader" Background="Transparent" Width="{Binding ElementName=tabBrowserChromium, Path=ActualWidth}" >
+            <Image x:Name="faviconPresenter" 
+                   DockPanel.Dock="Left" 
+                   Width="20" 
+                   Source="{Binding ElementName=tabBrowserChromium, Path=FaviconSource}"
+                   HorizontalAlignment="Left" 
+                   Margin="5"/>
+            <Button x:Name="btnClose"  
+                    DockPanel.Dock="Right"
+                    HorizontalAlignment="Right"
+                    VerticalAlignment="Center"
+                    Content="{md:PackIcon Kind=Close, Size=15}"
+                    Foreground="{Binding ElementName=tabBrowserChromium, Path=Foreground}"
+                    Width="20"
+                    Height="20"
+                    Command="{Binding ElementName=tabBrowserChromium, Path=CloseThisTab}" 
+                    Margin="5">
+                <Button.Style>
+                    <Style TargetType="Button" BasedOn="{StaticResource MaterialDesignIconButton}">
+                        <Setter Property="Background" Value="{DynamicResource Primary.Dark}"/>
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding RelativeSource={RelativeSource AncestorType=local:TabBrowserTest}, Path=IsMouseOver}" Value="True">
+                                <Setter Property="Background" Value="{DynamicResource Secondary.Dark}"/>
+                            </DataTrigger>
+                            <DataTrigger Binding="{Binding RelativeSource={RelativeSource AncestorType=local:TabBrowserTest}, Path=IsSelected}" Value="True">
+                                <Setter Property="Background" Value="{DynamicResource Secondary.Light}"/>
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </Button.Style>
+            </Button>
+            <Popup x:Name="popupScreenshot"  
+                   IsOpen="{Binding ElementName=tabBrowserChromium, Path=IsMouseOver, Mode=OneWay}">
+                <md:Card Width="{Binding Source={x:Static m:Settings.Default}, Path=TabItemWidth}" 
+                         Height="{Binding RelativeSource={RelativeSource Self}, Path=ActualWidth, Converter={x:Static converters:DoubleDivideParameterConverter.Default}, ConverterParameter=1.5}" 
+                         UniformCornerRadius="22" 
+                         Margin="5">
+                    <DockPanel Height="200" >
+                        <Border DockPanel.Dock="Top" Background="{DynamicResource Primary.Light}"  VerticalAlignment="Top" CornerRadius="20 20 0 0">
+                            <TextBlock Text="TExt" Foreground="{DynamicResource White.Dark}" TextAlignment="Center" TextWrapping="Wrap" Margin="20 5 20 5"/>
+                        </Border>
+                        <Border Background="Aqua" CornerRadius="0 0 20 20"/>
+
+
+                    </DockPanel>
+
+                </md:Card>
+            </Popup>
+            <TextBlock x:Name="titlePresenter" 
+                       Text="{Binding ElementName=chromium, Path=Text, Converter={x:Static converters:BlankToWelcomeConverter.Default}}" 
+                       TextTrimming="CharacterEllipsis" 
+                       HorizontalAlignment="Center" 
+                       VerticalAlignment="Center"/>
+           
+        </DockPanel>
+    </TabItem.Header>
+    <Grid>
+        <TextBlock x:Name="chromium" Text="www.google.com"/>
+        <!--<Popup x:Name="popupScreenshot2"   PlacementTarget="{Binding ElementName=chromium}"
+                   IsOpen="{Binding ElementName=chromium, Path=IsMouseOver, Mode=OneWay}">
+            <md:Card Width="{Binding Source={x:Static m:Settings.Default}, Path=TabItemWidth}" 
+                         Height="{Binding RelativeSource={RelativeSource Self}, Path=ActualWidth, Converter={x:Static converters:DoubleDivideParameterConverter.Default}, ConverterParameter=1.5}" 
+                         UniformCornerRadius="22" 
+                         Margin="5">
+                <DockPanel Height="200" >
+                    <Border DockPanel.Dock="Top" Background="{DynamicResource Primary.Light}"  VerticalAlignment="Top" CornerRadius="20 20 0 0">
+                        <TextBlock Text="TExt" Foreground="{DynamicResource White.Dark}" TextAlignment="Center" TextWrapping="Wrap" Margin="20 5 20 5"/>
+                    </Border>
+                    <Border Background="Pink" CornerRadius="0 0 20 20"/>
+
+
+                </DockPanel>
+
+            </md:Card>
+        </Popup>-->
+    </Grid>
+</TabItem>

@@ -1,0 +1,459 @@
+﻿<Application x:Class="MeBrowser.App"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="clr-namespace:MeBrowser"
+             xmlns:converters="clr-namespace:MeBrowser.Converters"
+             xmlns:componentmodel="clr-namespace:System.ComponentModel;assembly=WindowsBase"
+             StartupUri="View/MainView.xaml"
+             xmlns:md="http://materialdesigninxaml.net/winfx/xaml/themes" 
+             xmlns:vm="clr-namespace:MeBrowser.ViewModel"
+             xmlns:v="clr-namespace:MeBrowser.View"
+             xmlns:m="clr-namespace:MeBrowser.Model"
+             xmlns:sys="clr-namespace:System;assembly=System.Runtime"
+             xmlns:b="http://schemas.microsoft.com/xaml/behaviors"
+             xmlns:tab="clr-namespace:MeBrowser.TabBrowsers"
+             xmlns:h="clr-namespace:MeBrowser.Helpers"
+             DispatcherUnhandledException="Application_DispatcherUnhandledException">
+    <Application.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <!--ResourceDictionary ở index 0 sẽ được thay thế bởi resource language-->
+                <ResourceDictionary Source="Languages/DisplayLanguage.Vietnamese.xaml"/>
+                <!--index 1 sẽ được modify bởi MainViewModel.OnPrimaryColorChanged và MainViewModel.OnSecondaryColorChanged-->
+                <md:BundledTheme BaseTheme="Light" PrimaryColor="DeepPurple" SecondaryColor="Yellow" />
+                <ResourceDictionary Source="pack://application:,,,/MaterialDesignThemes.Wpf;component/Themes/MaterialDesignTheme.Defaults.xaml" />
+            </ResourceDictionary.MergedDictionaries>
+
+            <SolidColorBrush x:Key="Primary.Dark" Color="#673AB7"/>
+            <SolidColorBrush x:Key="Primary.Light" Color="#8364ba"/>
+            <SolidColorBrush x:Key="Secondary.Dark" Color="#ffeb3b"/>
+            <SolidColorBrush x:Key="Secondary.Light" Color="#ffff72"/>
+            <SolidColorBrush x:Key="White.Dark" Color="#eeeeee"/>
+            <SolidColorBrush x:Key="White.Light" Color="#ffffff"/>
+
+            <ImageBrush x:Key="BlankTab.Background"/>
+
+            <SolidColorBrush x:Key="DeepPurple.Dark" Color="#673AB7"/>
+            <SolidColorBrush x:Key="DeepPurple.Light" Color="#8364ba"/>
+            <SolidColorBrush x:Key="Yellow.Dark" Color="#ffeb3b"/>
+            <SolidColorBrush x:Key="Yellow.Light" Color="#ffff72"/>
+            <SolidColorBrush x:Key="Red.Dark" Color="#f44336"/>
+            <SolidColorBrush x:Key="Red.Light" Color="#ff7961"/>
+            <SolidColorBrush x:Key="Pink.Dark" Color="#e91e63"/>
+            <SolidColorBrush x:Key="Pink.Light" Color="#ff6090"/>
+            <SolidColorBrush x:Key="Purple.Dark" Color="#9c27b0"/>
+            <SolidColorBrush x:Key="Purple.Light" Color="#d05ce3"/>
+            <SolidColorBrush x:Key="Blue.Dark" Color="#2196f3"/>
+            <SolidColorBrush x:Key="Blue.Light" Color="#6ec6ff"/>
+            <SolidColorBrush x:Key="Cyan.Dark" Color="#00bcd4"/>
+            <SolidColorBrush x:Key="Cyan.Light" Color="#62efff"/>
+            <SolidColorBrush x:Key="Teal.Dark" Color="#009688"/>
+            <SolidColorBrush x:Key="Teal.Light" Color="#52c7b8"/>
+            <SolidColorBrush x:Key="Green.Dark" Color="#168529"/>
+            <SolidColorBrush x:Key="Green.Light" Color="#53b655"/>
+            <SolidColorBrush x:Key="Amber.Dark" Color="#ffc107"/>
+            <SolidColorBrush x:Key="Amber.Light" Color="#fff350"/>
+            <SolidColorBrush x:Key="Orange.Dark" Color="#ff9800"/>
+            <SolidColorBrush x:Key="Orange.Light" Color="#ffc947"/>
+            <SolidColorBrush x:Key="DeepOrange.Dark" Color="#ff5722"/>
+            <SolidColorBrush x:Key="DeepOrange.Light" Color="#ff8a50"/>
+            <SolidColorBrush x:Key="BlueGrey.Dark" Color="#607d8b"/>
+            <SolidColorBrush x:Key="BlueGrey.Light" Color="#8eacbb"/>
+            <SolidColorBrush x:Key="LightGreen.Dark" Color="#8bc34a"/>
+            <SolidColorBrush x:Key="LightGreen.Light" Color="#bef67a"/>
+
+            <x:Array x:Key="ArrayColors" Type="{x:Type m:ColorContainer}">
+                <m:ColorContainer Name="DeepPurple" Brush="{StaticResource DeepPurple.Dark}"/>
+                <m:ColorContainer Name="Yellow" Brush="{StaticResource Yellow.Dark}"/>
+                <m:ColorContainer Name="Red" Brush="{StaticResource Red.Dark}"/>
+                <m:ColorContainer Name="Pink" Brush="{StaticResource Pink.Dark}"/>
+                <m:ColorContainer Name="Purple" Brush="{StaticResource Purple.Dark}"/>
+                <m:ColorContainer Name="Blue" Brush="{StaticResource Blue.Dark}"/>
+                <m:ColorContainer Name="Cyan" Brush="{StaticResource Cyan.Dark}"/>
+                <m:ColorContainer Name="Teal" Brush="{StaticResource Teal.Dark}"/>
+                <m:ColorContainer Name="Green" Brush="{StaticResource Green.Dark}"/>
+                <m:ColorContainer Name="Amber" Brush="{StaticResource Amber.Dark}"/>
+                <m:ColorContainer Name="Orange" Brush="{StaticResource Orange.Dark}"/>
+                <m:ColorContainer Name="DeepOrange" Brush="{StaticResource DeepOrange.Dark}"/>
+                <m:ColorContainer Name="BlueGrey" Brush="{StaticResource BlueGrey.Dark}"/>
+                <m:ColorContainer Name="LightGreen" Brush="{StaticResource LightGreen.Dark}"/>
+            </x:Array>
+
+            <CollectionViewSource x:Key="PrimaryColorsView" Source="{StaticResource ArrayColors}"/>
+            <CollectionViewSource x:Key="SecondaryColorsView" Source="{StaticResource ArrayColors}"/>
+
+            <DataTemplate DataType="{x:Type m:ColorContainer}">
+                <StackPanel Orientation="Horizontal">
+                    <Border Width="20" Height="20" Background="{Binding Brush}"/>
+                    <TextBlock Text="{Binding Name}" Foreground="{DynamicResource Primary.Dark}" VerticalAlignment="Center" Margin="10 0 0 0"/>
+                </StackPanel>
+            </DataTemplate>
+            
+            <SolidColorBrush x:Key="DefaultSolid" Color="#D7DADD"/>
+            <SolidColorBrush x:Key="PrimarySolid" Color="#044CD0"/>
+            <SolidColorBrush x:Key="SecondarySolid" Color="#7A8793"/>
+            <SolidColorBrush x:Key="SuccessSolid" Color="#1FAE51"/>
+            <SolidColorBrush x:Key="InfoSolid" Color="#09AEAE"/>
+            <SolidColorBrush x:Key="WarningSolid" Color="#E6BC15"/>
+            <SolidColorBrush x:Key="DangerSolid" Color="#D72503"/>
+            <SolidColorBrush x:Key="DarkSolid" Color="#23272B"/>
+
+            <LinearGradientBrush x:Key="PeachGradient" >
+                <GradientStop Offset="0" Color="#FFD86F"/>
+                <GradientStop Offset="0.75" Color="#FC6262"/>
+            </LinearGradientBrush>
+            <LinearGradientBrush x:Key="AquaGradient" >
+                <GradientStop Offset="0" Color="#2096ff"/>
+                <GradientStop Offset="0.75" Color="#05ffa3"/>
+            </LinearGradientBrush>
+            <LinearGradientBrush x:Key="PurpleGradient" >
+                <GradientStop Offset="0" Color="#ff6ec4 "/>
+                <GradientStop Offset="0.75" Color="#7873f5"/>
+            </LinearGradientBrush>
+            <LinearGradientBrush x:Key="BlueGradient" >
+                <GradientStop Offset="0" Color="#45cafc"/>
+                <GradientStop Offset="0.75" Color="#303f9f"/>
+            </LinearGradientBrush>
+            <LinearGradientBrush x:Key="YellowGradient" >
+                <GradientStop Offset="0" Color="#FFEC00"/>
+                <GradientStop Offset="0.75" Color="#FFD400"/>
+            </LinearGradientBrush>
+            <LinearGradientBrush x:Key="CheckedGradient" >
+                <GradientStop Offset="0" Color="#FFEC00"/>
+                <GradientStop Offset="0.75" Color="#01C32C"/>
+            </LinearGradientBrush>
+            <LinearGradientBrush x:Key="UncheckedGradient" >
+                <GradientStop Offset="0" Color="#FFD86F"/>
+                <GradientStop Offset="0.75" Color="#DC1C13"/>
+            </LinearGradientBrush>
+            <LinearGradientBrush x:Key="SkyGradient" >
+                <GradientStop Offset="0" Color="Azure"/>
+                <GradientStop Offset="0.35" Color="AliceBlue"/>
+                <GradientStop Offset="0.65" Color="#D9F2FE"/>
+            </LinearGradientBrush>
+
+            <RadialGradientBrush x:Key="TurquoiseGradient" Center="0.25 0.5" RadiusX="0.8" RadiusY="0.8" GradientOrigin="0 0.5">
+                <GradientStop Offset="0" Color="#FAF9F6"/>
+                <GradientStop Offset="0.75" Color="#09AEAE"/>
+            </RadialGradientBrush>
+            <RadialGradientBrush x:Key="AzureGradient" Center="0.25 0.5" RadiusX="0.8" RadiusY="0.8" GradientOrigin="0 0.5">
+                <GradientStop Offset="0" Color="#EDFFFD"/>
+                <GradientStop Offset="0.2" Color="#BFE8FD"/>
+                <GradientStop Offset="0.85" Color="#91D1FE"/>
+            </RadialGradientBrush>
+            
+            <Style x:Key="Window.CustomTitleBarStyle" TargetType="Window">
+                <Setter Property="WindowChrome.WindowChrome">
+                    <Setter.Value>
+                        <WindowChrome CaptionHeight="0"
+                              CornerRadius="0"
+                              GlassFrameThickness="0"
+                              NonClientFrameEdges="None"
+                              ResizeBorderThickness="5"
+                              UseAeroCaptionButtons="True" />
+                    </Setter.Value>
+                </Setter>
+                <Setter Property="AllowsTransparency" Value="True"/>
+                <Setter Property="WindowStyle" Value="None"/>
+                <Setter Property="Background" Value="{DynamicResource White.Dark}"/>
+                <Setter Property="BorderBrush" Value="{DynamicResource Primary.Dark}"/>
+                <Setter Property="BorderThickness" Value="2"/>
+                <Setter Property="h:AttachedManager.CornerRadius" Value="5 5 0 0"/>
+                <Setter Property="ResizeMode" Value="CanResizeWithGrip"/>
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="Window">
+                            <Grid>
+                                <Border Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="{Binding RelativeSource={RelativeSource Mode=TemplatedParent}, Path=(h:AttachedManager.CornerRadius)}">
+                                    <AdornerDecorator>
+                                        <ContentPresenter />
+                                    </AdornerDecorator>
+                                    <Border.Style>
+                                        <Style TargetType="Border">
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding RelativeSource={x:Static RelativeSource.TemplatedParent}, Path=WindowState}" Value="Maximized">
+                                                    <Setter Property="Margin" Value="7 7 7 47"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Border.Style>
+                                </Border>
+                            </Grid>
+                            <ControlTemplate.Triggers>
+                                <Trigger Property="WindowState" Value="Maximized">
+                                    <Setter Property="h:AttachedManager.CornerRadius" Value="0"/>
+                                </Trigger>
+                            </ControlTemplate.Triggers>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+            </Style>
+
+            <BooleanToVisibilityConverter x:Key="BooleanToVisibility"/>
+
+            <Style x:Key="TabBrowserBase.BrowserStyle" TargetType="{x:Type tab:TabBrowserBase}">
+                <Setter Property="Background" Value="{DynamicResource Primary.Light}" />
+                <Setter Property="Foreground" Value="{DynamicResource White.Dark}" />
+                <Setter Property="FocusVisualStyle" Value="{StaticResource FocusVisual}" />
+                <Setter Property="Height" Value="40" />
+                <Setter Property="Width" Value="{Binding Source={x:Static vm:MainViewModel.Default}, Path=TabItemWidth, Mode=OneWay}" />
+                <Setter Property="SnapsToDevicePixels" Value="True" />
+                <Setter Property="Padding" Value="0"/>
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="{x:Type tab:TabBrowserBase}">
+                            <ControlTemplate.Resources>
+                                <RectangleGeometry x:Key="RectangleGeometry.Ripple" Rect="0 0 250 40" RadiusX="10" RadiusY="10"/>
+                                <Storyboard x:Key="SelectHorizontalTabItem">
+                                    <DoubleAnimation Storyboard.TargetName="ScaleTransform"
+                                                Storyboard.TargetProperty="ScaleY"
+                                                From="0"
+                                                To="1"
+                                                Duration="0" />
+                                    <DoubleAnimation Storyboard.TargetName="ScaleTransform"
+                                                Storyboard.TargetProperty="ScaleX"
+                                                From="0"
+                                                To="1"
+                                                Duration="0:0:0.3" >
+                                        <DoubleAnimation.EasingFunction>
+                                            <SineEase EasingMode="EaseOut" />
+                                        </DoubleAnimation.EasingFunction>
+                                    </DoubleAnimation>
+                                    <ObjectAnimationUsingKeyFrames Storyboard.TargetName="SelectionHighlightCanvas"
+                                                               Storyboard.TargetProperty="Visibility">
+                                        <DiscreteObjectKeyFrame KeyTime="0:0:0.3" Value="{x:Static Visibility.Visible}"/>
+                                    </ObjectAnimationUsingKeyFrames>
+                                </Storyboard>
+                            </ControlTemplate.Resources>
+                            <AdornerDecorator>
+                                <Grid x:Name="Root" >
+                                    <!--Taọ hiệu ứng xoè ra khi tab được chọn-->
+                                    <Border x:Name="SelectionHighlightBorder" 
+                                            Background="{DynamicResource Secondary.Dark}" 
+                                            CornerRadius="10 10 0 0"
+                                            RenderTransformOrigin="0.5,0.5"  
+                                            Visibility="Hidden">
+                                        <Border.RenderTransform>
+                                            <ScaleTransform x:Name="ScaleTransform" ScaleX="1" ScaleY="1" />
+                                        </Border.RenderTransform>
+                                    </Border>
+                                    <!--Phần header của tab -->
+                                    <md:ColorZone x:Name="ColorZoneHeader"  
+                                                HorizontalAlignment="Stretch"
+                                                VerticalAlignment="Stretch"
+                                                Background="{TemplateBinding Background}" 
+                                                BorderBrush="{DynamicResource Primary.Dark}"
+                                                BorderThickness="0.25"
+                                                CornerRadius="10 10 0 0"
+                                                Focusable="False"
+                                                Mode="Custom"                                        
+                                                Margin="0 5 0 0">
+                                        <md:Ripple x:Name="contentPresenter" 
+                                            Feedback="{DynamicResource White.Light}"
+                                            ClipToBounds="True"
+                                            Clip="{StaticResource RectangleGeometry.Ripple}"
+                                            Foreground="{DynamicResource White.Dark}"
+                                            Padding="{TemplateBinding Padding}"
+                                            HorizontalContentAlignment="Center"
+                                            VerticalContentAlignment="Center"  
+                                                Content="{TemplateBinding Header}"
+                                            ContentStringFormat="{TemplateBinding HeaderStringFormat}"
+                                            ContentTemplate="{TemplateBinding HeaderTemplate}"
+                                            ContentTemplateSelector="{TemplateBinding HeaderTemplateSelector}"
+                                            Focusable="False"
+                                            Opacity=".82"
+                                            RecognizesAccessKey="True"
+                                            SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}"
+                                            TextBlock.FontSize="14"
+                                            TextBlock.FontWeight="Medium"
+                                            TextOptions.TextFormattingMode="Ideal"
+                                            TextOptions.TextRenderingMode="Auto"
+                                            Typography.Capitals="{TemplateBinding Typography.Capitals}"/>
+                                    </md:ColorZone>
+                                    <!--Tạo ra 2 mép cong cong ở cạnh dưới của tab-->
+                                    <Canvas x:Name="SelectionHighlightCanvas" Visibility="Hidden">
+                                        <Path x:Name="LeftFillet" 
+                                          Data="M 0 40 L 0 30 A 10 10 0 0 1 -5 40 Z"  
+                                          Fill="{DynamicResource Secondary.Dark}" />
+                                        <Path x:Name="RightFillet"  
+                                          Data="M 0 40 L 0 30 A 10 10 0 0 0 5 40 Z"  
+                                          Fill="{DynamicResource Secondary.Dark}" >
+                                            <Path.RenderTransform>
+                                                <TranslateTransform X="{Binding ElementName=SelectionHighlightCanvas, Path=ActualWidth}"/>
+                                            </Path.RenderTransform>
+                                        </Path>
+                                    </Canvas>
+                                </Grid>
+                            </AdornerDecorator>
+                            <ControlTemplate.Triggers>
+                                <Trigger Property="IsEnabled" Value="False">
+                                    <Setter Property="Opacity" Value="0.38" />
+                                </Trigger>
+                                <Trigger Property="IsMouseOver" Value="True">
+                                    <Setter Property="Foreground" Value="{DynamicResource Primary.Dark}" />
+                                    <Setter TargetName="contentPresenter" Property="Foreground" Value="{DynamicResource Primary.Dark}" />
+                                    <Setter TargetName="ColorZoneHeader" Property="Background" Value="{DynamicResource Secondary.Light}" />
+                                </Trigger>
+                                <Trigger Property="IsSelected" Value="True">
+                                    <Setter Property="Panel.ZIndex" Value="99"/>
+                                    <Setter Property="Foreground" Value="{DynamicResource Primary.Dark}" />
+                                    <Setter TargetName="contentPresenter" Property="Foreground" Value="{DynamicResource Primary.Dark}" />
+                                    <Setter TargetName="contentPresenter" Property="Opacity" Value="1" />
+                                    <Setter TargetName="ColorZoneHeader" Property="Background" Value="Transparent" />
+                                    <Setter TargetName="ColorZoneHeader" Property="BorderThickness" Value="0" />
+                                    <Setter TargetName="ColorZoneHeader" Property="Margin" Value="0" />
+                                    <Setter TargetName="SelectionHighlightBorder" Property="Visibility" Value="Visible" />
+                                </Trigger>
+                                <!--Selected TabItem animations-->
+                                <MultiDataTrigger>
+                                    <MultiDataTrigger.Conditions>
+                                        <Condition Binding="{Binding RelativeSource={RelativeSource Self}, Path=IsSelected}" Value="True" />
+                                        <!--<Condition Binding="{Binding TabStripPlacement, RelativeSource={RelativeSource AncestorType={x:Type TabControl}}}" Value="Top" />-->
+                                    </MultiDataTrigger.Conditions>
+                                    <MultiDataTrigger.EnterActions>
+                                        <BeginStoryboard x:Name="BeginSelectionAnimation" Storyboard="{StaticResource SelectHorizontalTabItem}" />
+                                    </MultiDataTrigger.EnterActions>
+                                    <MultiDataTrigger.ExitActions>
+                                        <StopStoryboard BeginStoryboardName="BeginSelectionAnimation"/>
+                                    </MultiDataTrigger.ExitActions>
+                                </MultiDataTrigger>
+                            </ControlTemplate.Triggers>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+            </Style>
+
+            <Style x:Key="TabItem.BrowserStyle" TargetType="{x:Type TabItem}">
+                <Setter Property="Background" Value="{DynamicResource Primary.Light}" />
+                <Setter Property="Foreground" Value="{DynamicResource White.Dark}" />
+                <Setter Property="FocusVisualStyle" Value="{StaticResource FocusVisual}" />
+                <Setter Property="Height" Value="40" />
+                <Setter Property="Width" Value="{Binding Source={x:Static vm:MainViewModel.Default}, Path=TabItemWidth, Mode=OneWay}" />
+                <Setter Property="SnapsToDevicePixels" Value="True" />
+                <Setter Property="Padding" Value="0"/>
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="{x:Type TabItem}">
+                            <ControlTemplate.Resources>
+                                <RectangleGeometry x:Key="RectangleGeometry.Ripple" Rect="0 0 250 40" RadiusX="10" RadiusY="10"/>
+                                <Storyboard x:Key="SelectHorizontalTabItem">
+                                    <DoubleAnimation Storyboard.TargetName="ScaleTransform"
+                                                Storyboard.TargetProperty="ScaleY"
+                                                From="0"
+                                                To="1"
+                                                Duration="0" />
+                                    <DoubleAnimation Storyboard.TargetName="ScaleTransform"
+                                                Storyboard.TargetProperty="ScaleX"
+                                                From="0"
+                                                To="1"
+                                                Duration="0:0:0.3" >
+                                        <DoubleAnimation.EasingFunction>
+                                            <SineEase EasingMode="EaseOut" />
+                                        </DoubleAnimation.EasingFunction>
+                                    </DoubleAnimation>
+                                    <ObjectAnimationUsingKeyFrames Storyboard.TargetName="SelectionHighlightCanvas"
+                                                               Storyboard.TargetProperty="Visibility">
+                                        <DiscreteObjectKeyFrame KeyTime="0:0:0.3" Value="{x:Static Visibility.Visible}"/>
+                                    </ObjectAnimationUsingKeyFrames>
+                                </Storyboard>
+                            </ControlTemplate.Resources>
+                            <AdornerDecorator>
+                                <Grid x:Name="Root" >
+                                    <!--Taọ hiệu ứng xoè ra khi tab được chọn-->
+                                    <Border x:Name="SelectionHighlightBorder" 
+                                            Background="{DynamicResource Secondary.Dark}" 
+                                            CornerRadius="10 10 0 0"
+                                            RenderTransformOrigin="0.5,0.5"  
+                                            Visibility="Hidden">
+                                        <Border.RenderTransform>
+                                            <ScaleTransform x:Name="ScaleTransform" ScaleX="1" ScaleY="1" />
+                                        </Border.RenderTransform>
+                                    </Border>
+                                    <!--Phần header của tab -->
+                                    <md:ColorZone x:Name="ColorZoneHeader"  
+                                                HorizontalAlignment="Stretch"
+                                                VerticalAlignment="Stretch"
+                                                Background="{TemplateBinding Background}" 
+                                                BorderBrush="{DynamicResource Primary.Dark}"
+                                                BorderThickness="0.25"
+                                                CornerRadius="10 10 0 0"
+                                                Focusable="False"
+                                                Mode="Custom"                                        
+                                                Margin="0 5 0 0">
+                                        <md:Ripple x:Name="contentPresenter" 
+                                            Feedback="{DynamicResource White.Light}"
+                                            ClipToBounds="True"
+                                            Clip="{StaticResource RectangleGeometry.Ripple}"
+                                            Foreground="{DynamicResource White.Dark}"
+                                            Padding="{TemplateBinding Padding}"
+                                            HorizontalContentAlignment="Center"
+                                            VerticalContentAlignment="Center"  
+                                                Content="{TemplateBinding Header}"
+                                            ContentStringFormat="{TemplateBinding HeaderStringFormat}"
+                                            ContentTemplate="{TemplateBinding HeaderTemplate}"
+                                            ContentTemplateSelector="{TemplateBinding HeaderTemplateSelector}"
+                                            Focusable="False"
+                                            Opacity=".82"
+                                            RecognizesAccessKey="True"
+                                            SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}"
+                                            TextBlock.FontSize="14"
+                                            TextBlock.FontWeight="Medium"
+                                            TextOptions.TextFormattingMode="Ideal"
+                                            TextOptions.TextRenderingMode="Auto"
+                                            Typography.Capitals="{TemplateBinding Typography.Capitals}"/>
+                                    </md:ColorZone>
+                                    <!--Tạo ra 2 mép cong cong ở cạnh dưới của tab-->
+                                    <Canvas x:Name="SelectionHighlightCanvas" Visibility="Hidden">
+                                        <Path x:Name="LeftFillet" 
+                                          Data="M 0 40 L 0 30 A 10 10 0 0 1 -5 40 Z"  
+                                          Fill="{DynamicResource Secondary.Dark}" />
+                                        <Path x:Name="RightFillet"  
+                                          Data="M 0 40 L 0 30 A 10 10 0 0 0 5 40 Z"  
+                                          Fill="{DynamicResource Secondary.Dark}" >
+                                            <Path.RenderTransform>
+                                                <TranslateTransform X="{Binding ElementName=SelectionHighlightCanvas, Path=ActualWidth}"/>
+                                            </Path.RenderTransform>
+                                        </Path>
+                                    </Canvas>
+                                </Grid>
+                            </AdornerDecorator>
+                            <ControlTemplate.Triggers>
+                                <Trigger Property="IsEnabled" Value="False">
+                                    <Setter Property="Opacity" Value="0.38" />
+                                </Trigger>
+                                <Trigger Property="IsMouseOver" Value="True">
+                                    <Setter Property="Foreground" Value="{DynamicResource Primary.Dark}" />
+                                    <Setter TargetName="contentPresenter" Property="Foreground" Value="{DynamicResource Primary.Dark}" />
+                                    <Setter TargetName="ColorZoneHeader" Property="Background" Value="{DynamicResource Secondary.Light}" />
+                                </Trigger>
+                                <Trigger Property="IsSelected" Value="True">
+                                    <Setter Property="Panel.ZIndex" Value="99"/>
+                                    <Setter Property="Foreground" Value="{DynamicResource Primary.Dark}" />
+                                    <Setter TargetName="contentPresenter" Property="Foreground" Value="{DynamicResource Primary.Dark}" />
+                                    <Setter TargetName="contentPresenter" Property="Opacity" Value="1" />
+                                    <Setter TargetName="ColorZoneHeader" Property="Background" Value="Transparent" />
+                                    <Setter TargetName="ColorZoneHeader" Property="BorderThickness" Value="0" />
+                                    <Setter TargetName="ColorZoneHeader" Property="Margin" Value="0" />
+                                    <Setter TargetName="SelectionHighlightBorder" Property="Visibility" Value="Visible" />
+                                </Trigger>
+                                <!--Selected TabItem animations-->
+                                <MultiDataTrigger>
+                                    <MultiDataTrigger.Conditions>
+                                        <Condition Binding="{Binding RelativeSource={RelativeSource Self}, Path=IsSelected}" Value="True" />
+                                        <!--<Condition Binding="{Binding TabStripPlacement, RelativeSource={RelativeSource AncestorType={x:Type TabControl}}}" Value="Top" />-->
+                                    </MultiDataTrigger.Conditions>
+                                    <MultiDataTrigger.EnterActions>
+                                        <BeginStoryboard x:Name="BeginSelectionAnimation" Storyboard="{StaticResource SelectHorizontalTabItem}" />
+                                    </MultiDataTrigger.EnterActions>
+                                    <MultiDataTrigger.ExitActions>
+                                        <StopStoryboard BeginStoryboardName="BeginSelectionAnimation"/>
+                                    </MultiDataTrigger.ExitActions>
+                                </MultiDataTrigger>
+                            </ControlTemplate.Triggers>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+            </Style>
+        </ResourceDictionary>
+    </Application.Resources>
+</Application>

@@ -1,0 +1,105 @@
+﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:sys="clr-namespace:System;assembly=System.Runtime">
+    <!--Tab blank-->
+    <sys:String x:Key="BlankTab.Title">Xin chào!</sys:String>
+
+    <!--Tab setup-->
+    <sys:String x:Key="SetupTab.Title">Cài đặt</sys:String>
+    
+    <sys:String x:Key="RadioButton.Setup">CÀI ĐẶT</sys:String>
+    <sys:String x:Key="RadioButton.History">LỊCH SỬ</sys:String>
+    <sys:String x:Key="RadioButton.Downloads">TẢI XUỐNG</sys:String>
+    
+    <sys:String x:Key="TextBlock.SetupTitle.Settings">CÀI ĐẶT CHUNG</sys:String>
+    <sys:String x:Key="TextBlock.SetupTitle.History">LỊCH SỬ DUYỆT WEB</sys:String>
+    <sys:String x:Key="TextBox.SearchHistory.Hint">Tìm kiếm trong lịch sử</sys:String>
+    <sys:String x:Key="TextBlock.SetupTitle.Downloads">LỊCH SỬ TẢI XUỐNG</sys:String>
+    
+    <sys:String x:Key="TextBlock.SelectPrimary">Chọn màu chính:</sys:String>
+    <sys:String x:Key="ComboBox.SelectPrimary.Hint">Màu chính</sys:String>
+    <sys:String x:Key="TextBlock.SelectSecondary">Chọn màu phụ:</sys:String>
+    <sys:String x:Key="ComboBox.SelectSecondary.Hint">Màu phụ</sys:String>
+
+    <sys:String x:Key="TextBlock.ClearHistory">Xoá lịch sử duyệt web:</sys:String>
+
+    <sys:String x:Key="TextBlock.SelectSearchEngine">Chọn công cụ tìm kiếm:</sys:String>
+    <sys:String x:Key="ComboBox.SelectSearchEngine.Hint">Công cụ tìm kiếm</sys:String>
+
+    <sys:String x:Key="TextBlock.EnableJavaScript">Bật/Tắt JavaScript:</sys:String>
+
+    <sys:String x:Key="TextBlock.ShowErrorTime">Thời gian hiện thông báo lỗi:</sys:String>
+
+    <sys:String x:Key="TextBlock.SelectLanguage">Chọn ngôn ngữ hiển thị:</sys:String>
+    <sys:String x:Key="ComboBox.SelectLanguage.Hint">Ngôn ngữ hiển thị</sys:String>
+    <sys:String x:Key="DisplayLanguage.Vietnamese">Tiếng Việt</sys:String>
+    <sys:String x:Key="DisplayLanguage.English">Tiếng Anh</sys:String>
+
+    <sys:String x:Key="TextBlock.LookHighLightTextUp">Tra từ được bôi đen:</sys:String>
+    
+    <sys:String x:Key="TextBlock.SelectBackground">Chọn hình nền:</sys:String>
+    <sys:String x:Key="Button.SelectBackground">Chọn</sys:String>
+    <sys:String x:Key="Button.RemoveBackground">Xoá</sys:String>
+
+    <sys:String x:Key="Button.DeleteSelectedHistoryEntries">Xoá mục được chọn</sys:String>
+    
+    <sys:String x:Key="ListView.History.ContextMenu.OpenLinkInNewTab">Mở địa chỉ trong tab mới</sys:String>
+    <sys:String x:Key="ListView.History.ContextMenu.OpenLinkInBackgroundTab">Mở ngầm địa chỉ trong tab mới</sys:String>
+    <sys:String x:Key="ListView.History.Visits" xml:space="preserve"> lượt truy cập ngày </sys:String>
+
+    <sys:String x:Key="ListView.Downloads.Chip.InProgress">Đang tải</sys:String>
+    <sys:String x:Key="ListView.Downloads.Chip.Complete">Hoàn thành</sys:String>
+    <sys:String x:Key="ListView.Downloads.Chip.Cancelled">Đã huỷ</sys:String>
+    <sys:String x:Key="ListView.Downloads.Chip.Paused">Đã dừng</sys:String>
+    <sys:String x:Key="ListView.Downloads.StartTime" xml:space="preserve">Bắt đầu lúc: </sys:String>
+    <sys:String x:Key="ListView.Downloads.EndTime" xml:space="preserve">Kết thúc lúc: </sys:String>
+
+    <!--Dialog-->
+    <sys:String x:Key="Dialog.Close.Message">Bạn có thực sự muốn thoát?</sys:String>
+    <sys:String x:Key="Dialog.Close.Title">Thoát Me~~</sys:String>
+    <sys:String x:Key="Dialog.Error.Message">Không thể mở địa chỉ này:</sys:String>
+    <sys:String x:Key="Dialog.ClearHistory.Title">Xoá lịch sử</sys:String>
+    <sys:String x:Key="Dialog.ClearHistory.Message">Bạn có chắc muốn xoá toàn bộ lịch sử duyệt web?</sys:String>
+    <sys:String x:Key="Dialog.ClearHistoryComplete.Title">Xong!</sys:String>
+    <sys:String x:Key="Dialog.ClearHistoryComplete.Message">địa chỉ duyệt web đã bị xoá.</sys:String>
+    <sys:String x:Key="Dialog.CancelDownload.Title">Huỷ bỏ tải xuống?</sys:String>
+    <sys:String x:Key="Dialog.CancelDownload.Message" xml:space="preserve">Quá trình tải xuống vẫn chưa hoàn thành.&#13;</sys:String>
+    <sys:String x:Key="Dialog.RequestFullScreen.Title">Toàn màn hình?</sys:String>
+    <sys:String x:Key="Dialog.RequestFullScreen.Message" xml:space="preserve">Nội dung trên trang này đã chuyển sang chế độ toàn màn hình.&#13;Bạn có muốn phóng to Me không?</sys:String>
+    <sys:String x:Key="Dialog.RequestExitFullScreen.Title">Thoát toàn màn hình?</sys:String>
+    <sys:String x:Key="Dialog.RequestExitFullScreen.Message" xml:space="preserve">Nội dung trên trang này đã thoát khỏi chế độ toàn màn hình.&#13;Bạn có muốn thu nhỏ Me không?</sys:String>
+
+    <!--Main view-->
+    <sys:String x:Key="Button.ExitFullscreen">Nhấn để thoát khỏi chế độ toàn màn hình</sys:String>
+
+    <!--Chromium.ContextMenu-->
+    <sys:String x:Key="Chromium.ContextMenu.OpenLinkInNewTab">Mở địa chỉ trong tab mới</sys:String>
+    <sys:String x:Key="Chromium.ContextMenu.OpenLinkInBackgroundTab">Mở ngầm địa chỉ trong tab mới</sys:String>
+    <sys:String x:Key="Chromium.ContextMenu.CopyLink">Sao chép địa chỉ này</sys:String>
+
+    <sys:String x:Key="Chromium.ContextMenu.OpenImageInNewTab">Mở hình ảnh trong tab mới</sys:String>
+    <sys:String x:Key="Chromium.ContextMenu.CopyLinkImage">Sao chép địa chỉ hình ảnh</sys:String>
+    <sys:String x:Key="Chromium.ContextMenu.SaveImageAs">Lưu hình ảnh dưới dạng...</sys:String>
+
+    <sys:String x:Key="Chromium.ContextMenu.Translate">Dịch</sys:String>
+    <sys:String x:Key="Chromium.ContextMenu.SearchGoogleFor">Tìm kiếm Google cho</sys:String>
+    <sys:String x:Key="Chromium.ContextMenu.OrSearchWithBing">Hoặc tìm với Bing</sys:String>
+    <sys:String x:Key="Chromium.ContextMenu.Search">Tìm</sys:String>
+    <sys:String x:Key="Chromium.ContextMenu.OnPage">trên trang</sys:String>
+    <sys:String x:Key="Chromium.ContextMenu.ClearSearchResult">Xoá kết quả tìm được</sys:String>
+
+    <sys:String x:Key="Chromium.ContextMenu.Back">Trang trước</sys:String>
+    <sys:String x:Key="Chromium.ContextMenu.Forward">Trang sau</sys:String>
+    <sys:String x:Key="Chromium.ContextMenu.Reload">Tải lại</sys:String>
+
+    <sys:String x:Key="Chromium.ContextMenu.Cut">Cắt</sys:String>
+    <sys:String x:Key="Chromium.ContextMenu.Copy">Sao chép</sys:String>
+    <sys:String x:Key="Chromium.ContextMenu.Paste">Dán</sys:String>
+
+    <sys:String x:Key="Chromium.ContextMenu.SelectAll">Chọn tất cả</sys:String>
+
+    <sys:String x:Key="Chromium.ContextMenu.Print">In trang...</sys:String>
+    <sys:String x:Key="Chromium.ContextMenu.ViewSource">Xem nguồn trang...</sys:String>
+    <sys:String x:Key="Chromium.ContextMenu.Inspect">Kiểm tra (dành cho nhà phát triển)</sys:String>
+    <sys:String x:Key="Chromium.ContextMenu.Screenshot">Chụp ảnh trang này</sys:String>
+</ResourceDictionary>

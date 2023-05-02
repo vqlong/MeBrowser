@@ -1,0 +1,834 @@
+﻿<local:TabBrowserBase x:Class="MeBrowser.TabBrowsers.TabBrowserChromium"
+                      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                      xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+                      xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+                      xmlns:local="clr-namespace:MeBrowser.TabBrowsers"
+                      xmlns:behaviors="clr-namespace:MeBrowser.Behaviors"
+                      xmlns:cef="clr-namespace:CefSharp.Wpf;assembly=CefSharp.Wpf"
+                      xmlns:b="http://schemas.microsoft.com/xaml/behaviors"
+                      xmlns:md="http://materialdesigninxaml.net/winfx/xaml/themes"
+                      xmlns:vm="clr-namespace:MeBrowser.ViewModel"
+                      xmlns:converters="clr-namespace:MeBrowser.Converters"
+                      xmlns:m="clr-namespace:MeBrowser.Model"
+                      xmlns:sys="clr-namespace:System;assembly=System.Runtime" 
+                      xmlns:cul="clr-namespace:System.Globalization;assembly=System.Globalization"
+                      xmlns:h="clr-namespace:MeBrowser.Helpers"
+                      xmlns:PresentationOptions="http://schemas.microsoft.com/winfx/2006/xaml/presentation/options"
+                      mc:Ignorable="d PresentationOptions"  
+                      d:DesignHeight="800" d:DesignWidth="1200" 
+                      x:Name="tabBrowserChromium"
+                      Style="{StaticResource TabBrowserBase.BrowserStyle}">
+    <b:Interaction.Triggers>
+        <b:EventTrigger EventName="MouseEnter">
+            <b:InvokeCommandAction Command="{Binding ElementName=tabBrowserChromium, Path=CloseHistory}"/>
+            <b:InvokeCommandAction Command="{Binding ElementName=tabBrowserChromium, Path=CloseNavigation}"/>
+        </b:EventTrigger>
+    </b:Interaction.Triggers>
+    <local:TabBrowserBase.Resources>
+        <Style TargetType="Button" BasedOn="{StaticResource MaterialDesignIconButton}">
+            <Setter Property="Width" Value="30"/>
+            <Setter Property="Height" Value="30"/>
+            <Setter Property="ToolTipService.InitialShowDelay" Value="0"/>
+            <Setter Property="Margin" Value="0 2 0 0"/>
+        </Style>
+        
+        <Style TargetType="ToggleButton" BasedOn="{StaticResource MaterialDesignActionToggleButton}">
+            <Setter Property="Width" Value="30"/>
+            <Setter Property="Height" Value="30"/>
+            <Setter Property="ToolTipService.InitialShowDelay" Value="0"/>
+            <Setter Property="Margin" Value="5 2 0 0"/>
+            <Setter Property="Foreground" Value="{DynamicResource White.Dark}"/>
+        </Style>
+
+        <ProgressBar x:Key="DownloadStatus.IsInProgress" Width="20" Height="20" Foreground="{DynamicResource White.Dark}" IsIndeterminate="True" Value="0" Style="{StaticResource MaterialDesignCircularProgressBar}"/>
+
+        <Storyboard  x:Key="Storyboard.Loading">
+            <DoubleAnimationUsingKeyFrames Storyboard.TargetProperty="(h:AttachedManager.DoubleValue)" RepeatBehavior="Forever">
+                <DiscreteDoubleKeyFrame KeyTime="0:0:0.0" Value="1.0"/>
+                <DiscreteDoubleKeyFrame KeyTime="0:0:0.2" Value="2.0"/>
+                <DiscreteDoubleKeyFrame KeyTime="0:0:0.4" Value="3.0"/>
+                <DiscreteDoubleKeyFrame KeyTime="0:0:0.6" Value="4.0"/>
+                <DiscreteDoubleKeyFrame KeyTime="0:0:0.8" Value="5.0"/>
+                <DiscreteDoubleKeyFrame KeyTime="0:0:1.0" Value="6.0"/>
+                <DiscreteDoubleKeyFrame KeyTime="0:0:1.2" Value="6.0"/> 
+            </DoubleAnimationUsingKeyFrames>
+        </Storyboard>
+        <!--Storyboard với materialdesign báo lỗi cross thread-->
+        <Storyboard x:Key="Storyboard.Loading1">
+            <ObjectAnimationUsingKeyFrames Storyboard.TargetProperty="Content">
+                <DiscreteObjectKeyFrame KeyTime="0:0:0" Value="{md:PackIcon Kind=HexagonOutline}"/>
+                <DiscreteObjectKeyFrame KeyTime="0:0:0.2" Value="{md:PackIcon Kind=HexagonSlice1}"/>
+                <DiscreteObjectKeyFrame KeyTime="0:0:0.4" Value="{md:PackIcon Kind=HexagonSlice2}"/>
+                <DiscreteObjectKeyFrame KeyTime="0:0:0.6" Value="{md:PackIcon Kind=HexagonSlice3}"/>
+                <DiscreteObjectKeyFrame KeyTime="0:0:0.8" Value="{md:PackIcon Kind=HexagonSlice4}"/>
+                <DiscreteObjectKeyFrame KeyTime="0:0:1" Value="{md:PackIcon Kind=HexagonSlice5}"/>
+                <DiscreteObjectKeyFrame KeyTime="0:0:1.2" Value="{md:PackIcon Kind=HexagonSlice6}"/>
+            </ObjectAnimationUsingKeyFrames>
+        </Storyboard>
+        <Storyboard x:Key="Storyboard.Sample">
+            <DoubleAnimation Storyboard.TargetProperty="Width"
+                             To="10"
+                             Duration="0:0:1"
+                             AutoReverse="True" />
+            <DoubleAnimation Storyboard.TargetProperty="Height"
+                             To="10"
+                             Duration="0:0:1"
+                             AutoReverse="True" />
+        </Storyboard>
+    </local:TabBrowserBase.Resources>
+    <local:TabBrowserBase.Header>
+        <DockPanel x:Name="dockHeader" Background="Transparent" Width="{Binding ElementName=tabBrowserChromium, Path=ActualWidth}" >
+            <Image x:Name="faviconPresenter" 
+                   DockPanel.Dock="Left" 
+                   Width="18" 
+                   Source="{Binding ElementName=tabBrowserChromium, Path=FaviconSource}"
+                   HorizontalAlignment="Left" 
+                   Margin="5"/>
+            <Button x:Name="btnClose"  
+                    DockPanel.Dock="Right"
+                    HorizontalAlignment="Right"
+                    VerticalAlignment="Center"
+                    Content="{md:PackIcon Kind=Close, Size=15}"
+                    Foreground="{Binding ElementName=tabBrowserChromium, Path=Foreground}"
+                    Width="20"
+                    Height="20"
+                    Command="{Binding ElementName=tabBrowserChromium, Path=CloseThisTab}" 
+                    Margin="5">
+                <Button.Style>
+                    <Style TargetType="Button" BasedOn="{StaticResource MaterialDesignIconButton}">
+                        <Setter Property="Background" Value="{DynamicResource Primary.Dark}"/>
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding RelativeSource={RelativeSource AncestorType=local:TabBrowserChromium}, Path=IsMouseOver}" Value="True">
+                                <Setter Property="Background" Value="{DynamicResource Secondary.Dark}"/>
+                            </DataTrigger>
+                            <DataTrigger Binding="{Binding RelativeSource={RelativeSource AncestorType=local:TabBrowserChromium}, Path=IsSelected}" Value="True">
+                                <Setter Property="Background" Value="{DynamicResource Secondary.Light}"/>
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </Button.Style>
+            </Button>
+            <Popup x:Name="popupScreenshot" 
+                   PlacementTarget="{Binding ElementName=dockHeader}" 
+                   PopupAnimation="Slide" 
+                   AllowsTransparency="True" 
+                   IsOpen="{Binding ElementName=dockHeader, Path=Focusable, Mode=OneWay}">
+                <md:Card Width="{Binding Source={x:Static m:Settings.Default}, Path=TabItemWidth}" 
+                         Height="{Binding RelativeSource={RelativeSource Self}, Path=ActualWidth, Converter={x:Static converters:DoubleDivideParameterConverter.Default}, ConverterParameter=1.5}" 
+                         UniformCornerRadius="22" 
+                         Margin="5">
+                    <DockPanel  >
+                        <Border DockPanel.Dock="Top" MaxHeight="100" Background="{DynamicResource Primary.Light}"  VerticalAlignment="Top" CornerRadius="20 20 0 0">
+                            <TextBlock Text="{Binding ElementName=tabBrowserChromium, Path=Chromium.Title}" Foreground="{DynamicResource White.Dark}" TextAlignment="Center" TextWrapping="Wrap" Margin="20 5 20 5"/>
+                        </Border>
+                        <Border Background="{Binding ElementName=tabBrowserChromium, Path=Screenshot}" CornerRadius="0 0 20 20"/>
+                    </DockPanel>
+                    <md:Card.Effect>
+                        <DropShadowEffect BlurRadius="4.5" 
+                                          Color="{Binding ElementName=tabBrowserChromium, Path=Foreground.Color}"
+                                          Direction="225"
+                                          Opacity="0.8"
+                                          RenderingBias="Performance"
+                                          ShadowDepth="2"/>
+                    </md:Card.Effect>
+                </md:Card>
+            </Popup>
+            <TextBlock x:Name="titlePresenter" 
+                       Text="{Binding ElementName=tabBrowserChromium, Path=Chromium.Title, Converter={x:Static converters:BlankToWelcomeConverter.Default}}" 
+                       TextTrimming="CharacterEllipsis" 
+                       HorizontalAlignment="Center" 
+                       VerticalAlignment="Center"/>
+            <DockPanel.Style>
+                <Style TargetType="DockPanel">
+                    <Style.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Trigger.EnterActions>
+                                <BeginStoryboard x:Name="beginPopup">
+                                    <Storyboard>
+                                        <BooleanAnimationUsingKeyFrames Storyboard.TargetProperty="Focusable">
+                                            <DiscreteBooleanKeyFrame Value="True" KeyTime="0:0:1"/>
+                                        </BooleanAnimationUsingKeyFrames>
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </Trigger.EnterActions>
+                            <Trigger.ExitActions>
+                                <StopStoryboard BeginStoryboardName="beginPopup"/>
+                            </Trigger.ExitActions>
+                        </Trigger>
+                    </Style.Triggers>
+                </Style>
+            </DockPanel.Style>
+        </DockPanel>
+    </local:TabBrowserBase.Header>
+    <DockPanel  >
+        <Grid DockPanel.Dock="Top" x:Name="gridUrlBar" Background="{DynamicResource Primary.Light}" Visibility="{Binding RelativeSource={RelativeSource AncestorType={x:Type local:TabNotify}}, Path=TabBarVisibility}">
+            <ProgressBar Background="{DynamicResource Secondary.Dark}" Foreground="{DynamicResource Secondary.Light}" IsIndeterminate="{Binding ElementName=tabBrowserChromium, Path=Chromium.IsLoading}" BorderThickness="0" Height="{Binding ElementName=gridUrlBar, Path=ActualHeight}"/>
+            <DockPanel>
+                <ProgressBar x:Name="progressLoading" DockPanel.Dock="Bottom" Background="{DynamicResource Secondary.Dark}" Foreground="{DynamicResource Primary.Light}" BorderThickness="0" Height="2" IsIndeterminate="{Binding ElementName=tabBrowserChromium, Path=Chromium.IsLoading}" />
+                <Button DockPanel.Dock="Left" ToolTip="Back" ToolTipService.InitialShowDelay="500" x:Name="btnNavigateBack" Content="{md:PackIcon Kind=ArrowLeft, Size=25}" Command="{Binding ElementName=tabBrowserChromium, Path=Chromium.BackCommand}" Margin="5 2 0 0">
+                    <b:Interaction.Triggers>
+                        <b:EventTrigger EventName="MouseEnter">
+                            <b:InvokeCommandAction Command="{Binding ElementName=tabBrowserChromium, Path=OpenNavigation}"/>
+                        </b:EventTrigger>
+                    </b:Interaction.Triggers>
+                </Button>
+                <Button DockPanel.Dock="Left" ToolTip="Forward" ToolTipService.InitialShowDelay="500" x:Name="btnNavigateForward" Content="{md:PackIcon Kind=ArrowRight, Size=25}" Command="{Binding ElementName=tabBrowserChromium, Path=Chromium.ForwardCommand}">
+                    <b:Interaction.Triggers>
+                        <b:EventTrigger EventName="MouseEnter">
+                            <b:InvokeCommandAction Command="{Binding ElementName=tabBrowserChromium, Path=OpenNavigation}"/>
+                        </b:EventTrigger>
+                    </b:Interaction.Triggers>
+                </Button>
+                <Button DockPanel.Dock="Right" ToolTip="Close debugger" Content="{md:PackIcon Kind=RemoteTvOff, Size=25}" Command="{Binding ElementName=tabBrowserChromium, Path=CloseDebugger}" Visibility="{Binding ElementName=tabBrowserChromium, Path=IsDebuggerOpen, Converter={StaticResource BooleanToVisibility}}" Margin="0 2 5 0"/>
+                <ToggleButton DockPanel.Dock="Right" ToolTip="Download" x:Name="btnDownloadStatus" IsChecked="{Binding ElementName=tabBrowserChromium, Path=IsDownloadBarOpen}" Content="{md:PackIcon Kind=Download, Size=25}" >
+                    <ToggleButton.Style>
+                        <Style TargetType="ToggleButton" BasedOn="{StaticResource MaterialDesignActionToggleButton}">
+                            <Setter Property="Width" Value="30"/>
+                            <Setter Property="Height" Value="30"/>
+                            <Setter Property="Foreground" Value="{DynamicResource White.Dark}"/>
+                            <Setter Property="ToolTipService.InitialShowDelay" Value="0"/>
+                            <Setter Property="Margin" Value="5 2 5 0"/>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding ElementName=tabBrowserChromium, Path=CurrentDownload}" Value="{x:Null}">
+                                    <Setter Property="md:ToggleButtonAssist.OnContent" Value="{md:PackIcon Kind=TrayDownload}"/>
+                                </DataTrigger>
+                                <DataTrigger Binding="{Binding ElementName=tabBrowserChromium, Path=CurrentDownload.IsPaused}" Value="True">
+                                    <Setter Property="md:ToggleButtonAssist.OnContent" Value="{md:PackIcon Kind=Pause}"/>
+                                </DataTrigger>
+                                <DataTrigger Binding="{Binding ElementName=tabBrowserChromium, Path=CurrentDownload.IsInProgress}" Value="True">
+                                    <Setter Property="md:ToggleButtonAssist.OnContent" Value="{StaticResource DownloadStatus.IsInProgress}"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </ToggleButton.Style>
+                </ToggleButton>
+                <ToggleButton DockPanel.Dock="Right" ToolTip="Find" x:Name="btnFind" IsChecked="{Binding ElementName=tabBrowserChromium, Path=IsFindingBarOpen}" Content="{md:PackIcon Kind=Search, Size=25}" md:ToggleButtonAssist.OnContent="{md:PackIcon Kind=SearchExpand, Size=25}"/>
+                <ToggleButton DockPanel.Dock="Right" ToolTip="Mute" Content="{md:PackIcon Kind=VolumeHigh, Size=25}" md:ToggleButtonAssist.OnContent="{md:PackIcon Kind=Mute, Size=25}" Command="{Binding ElementName=tabBrowserChromium, Path=Chromium.ToggleAudioMuteCommand}"/>
+                <Button DockPanel.Dock="Right" ToolTip="Fullscreen" Content="{md:PackIcon Kind=Fullscreen, Size=30}" Command="{Binding RelativeSource={RelativeSource AncestorType={x:Type local:TabNotify}}, Path=Fullscreen}"/>
+                <Button DockPanel.Dock="Right" ToolTip="Setup" Content="{md:PackIcon Kind=CogOutline, Size=25}" Command="{Binding ElementName=tabBrowserChromium, Path=OpenSetupTab}"/>
+                <Button DockPanel.Dock="Right" ToolTip="Zoom Out" Content="{md:PackIcon Kind=Minus, Size=25}" Command="{Binding ElementName=tabBrowserChromium, Path=Chromium.ZoomOutCommand}"/>
+                <Button DockPanel.Dock="Right" ToolTip="Zoom Reset" Content="{md:PackIcon Kind=Equal, Size=25}" Command="{Binding ElementName=tabBrowserChromium, Path=Chromium.ZoomResetCommand}"/>
+                <Button DockPanel.Dock="Right" ToolTip="Zoom In" Content="{md:PackIcon Kind=Plus, Size=25}" Command="{Binding ElementName=tabBrowserChromium, Path=Chromium.ZoomInCommand}"/>
+                <Button DockPanel.Dock="Right" ToolTip="Reload" Content="{md:PackIcon Kind=Reload, Size=20}" Command="{Binding ElementName=tabBrowserChromium, Path=Chromium.ReloadCommand}"/>
+                <Button DockPanel.Dock="Right" ToolTip="Stop loading" Content="{md:PackIcon Kind=Close, Size=25}" Command="{Binding ElementName=tabBrowserChromium, Path=Chromium.StopCommand}" Visibility="{Binding ElementName=tabBrowserChromium, Path=Chromium.IsLoading, Converter={StaticResource BooleanToVisibility}}"/>
+                <Popup x:Name="popupNavigation" 
+                       PlacementTarget="{Binding ElementName=btnNavigateBack}"
+                       PopupAnimation="Slide" 
+                       AllowsTransparency="True" 
+                       IsOpen="{Binding ElementName=tabBrowserChromium, Path=IsNavigationOpen}">
+                    <md:Card Width="300" Margin="5">
+                        <md:Card.Effect>
+                            <DropShadowEffect BlurRadius="4.5"
+                                              Color="{Binding ElementName=tabBrowserChromium, Path=Foreground.Color}"
+                                              Direction="225"
+                                              Opacity="0.8"
+                                              RenderingBias="Performance"
+                                              ShadowDepth="3"/>
+                        </md:Card.Effect>
+                        <ListView x:Name="lsvNavigation" MaxHeight="400" ItemsSource="{Binding ElementName=tabBrowserChromium, Path=NavigationView}" IsSynchronizedWithCurrentItem="True" Margin="5" >
+                            <b:Interaction.Triggers>
+                                <b:EventTrigger EventName="PreviewMouseLeftButtonDown">
+                                    <b:InvokeCommandAction Command="{Binding ElementName=tabBrowserChromium, Path=ClickToLoad}"/>
+                                </b:EventTrigger>
+                            </b:Interaction.Triggers>
+                            <ListView.ItemTemplate>
+                                <DataTemplate DataType="{x:Type m:TabNavigationEntry}">
+                                    <StackPanel Orientation="Horizontal">
+                                        <Image Source="{Binding FaviconUrl}" Width="20" Margin="2 0 2 0"/>
+                                        <TextBlock Text="{Binding Title}" MaxWidth="250" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
+                                    </StackPanel>
+                                </DataTemplate>
+                            </ListView.ItemTemplate>
+                        </ListView>
+                    </md:Card>
+                </Popup>
+                <Border x:Name="borderUrl" BorderBrush="{Binding ElementName=textBoxUrl, Path=BorderBrush}" Height="30" CornerRadius="15" Margin="2 4 2 2">
+                    <Border.Style>
+                        <Style TargetType="Border">
+                            <Setter Property="BorderThickness" Value="1"/>
+                            <Setter Property="Background" Value="{DynamicResource White.Light}"/>
+                            <Style.Triggers>
+                                <Trigger Property="BorderBrush" Value="Transparent">
+                                    <Setter Property="BorderThickness" Value="0"/>
+                                    <Setter Property="Background" Value="{DynamicResource Secondary.Light}"/>
+                                </Trigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Border.Style>
+                    <DockPanel>
+                        <Button DockPanel.Dock="Right" ToolTip="Go" h:AttachedManager.Flag="{Binding ElementName=tabBrowserChromium, Path=Chromium.IsLoading, Mode=OneWay}" Command="{Binding ElementName=tabBrowserChromium, Path=LoadUrl}">
+                            <Button.Style>
+                                <Style TargetType="Button" BasedOn="{StaticResource MaterialDesignIconButton}">
+                                    <Setter Property="Width" Value="30"/>
+                                    <Setter Property="Height" Value="30"/>
+                                    <Setter Property="VerticalAlignment" Value="Center"/>
+                                    <Setter Property="Content" >
+                                        <Setter.Value>
+                                            <Image Source="pack://siteoforigin:,,,/Images/icon.ico" Width="20"/>
+                                        </Setter.Value>
+                                    </Setter>
+                                    <Setter Property="Margin" Value="0"/>
+                                    <Style.Triggers> 
+                                        <Trigger Property="h:AttachedManager.Flag" Value="True">
+                                            <Trigger.EnterActions>
+                                                <BeginStoryboard x:Name="BeginAnimationLoading" Storyboard="{StaticResource Storyboard.Loading}"/>
+                                            </Trigger.EnterActions>
+                                            <Trigger.ExitActions>
+                                                <StopStoryboard BeginStoryboardName="BeginAnimationLoading"/>
+                                            </Trigger.ExitActions>
+                                        </Trigger>
+                                        <Trigger Property="h:AttachedManager.DoubleValue" Value="1.0">
+                                            <Setter Property="Content" Value="{md:PackIcon Kind=HexagonSlice1}"/>
+                                        </Trigger>
+                                        <Trigger Property="h:AttachedManager.DoubleValue" Value="2.0">
+                                            <Setter Property="Content" Value="{md:PackIcon Kind=HexagonSlice2}"/>
+                                        </Trigger>
+                                        <Trigger Property="h:AttachedManager.DoubleValue" Value="3.0">
+                                            <Setter Property="Content" Value="{md:PackIcon Kind=HexagonSlice3}"/>
+                                        </Trigger>
+                                        <Trigger Property="h:AttachedManager.DoubleValue" Value="4.0">
+                                            <Setter Property="Content" Value="{md:PackIcon Kind=HexagonSlice4}"/>
+                                        </Trigger>
+                                        <Trigger Property="h:AttachedManager.DoubleValue" Value="5.0">
+                                            <Setter Property="Content" Value="{md:PackIcon Kind=HexagonSlice5}"/>
+                                        </Trigger>
+                                        <Trigger Property="h:AttachedManager.DoubleValue" Value="6.0">
+                                            <Setter Property="Content" Value="{md:PackIcon Kind=HexagonSlice6}"/>
+                                        </Trigger>
+                                        <!--<Trigger Property="h:AttachedManager.DoubleValue" Value="7.0">
+                                            <Setter Property="Content" Value="{md:PackIcon Kind=HexagonSlice6}"/>
+                                        </Trigger>-->
+                                    </Style.Triggers>
+                                </Style>
+                            </Button.Style>
+                        </Button>
+                        <!--Popup không chiếm không gian của parent nhưng nếu nó xuất hiện sau cùng trong dockpanel nó vẫn tạo ra 1 vùng trống-->
+                        <Popup x:Name="popupHistory" 
+                               PopupAnimation="Slide" 
+                               AllowsTransparency="True"
+                               IsOpen="{Binding ElementName=tabBrowserChromium, Path=IsHistoryOpen}">
+                            <md:Card Width="{Binding ElementName=borderUrl, Path=ActualWidth}" Margin="5">
+                                <md:Card.Effect>
+                                    <DropShadowEffect BlurRadius="4.5"
+                                                      Color="{Binding ElementName=textBoxUrl, Path=BorderBrush.Color}"
+                                                      Direction="225"
+                                                      Opacity="0.8"
+                                                      RenderingBias="Performance"
+                                                      ShadowDepth="3"/>
+                                </md:Card.Effect>
+                                <ListView x:Name="lsvHistory" ItemsSource="{Binding ElementName=tabBrowserChromium, Path=HistoryView}" IsSynchronizedWithCurrentItem="True" MinHeight="50" MaxHeight="300" Margin="5" >
+                                    <b:Interaction.Triggers>
+                                        <b:EventTrigger EventName="PreviewMouseLeftButtonDown">
+                                            <b:InvokeCommandAction Command="{Binding ElementName=tabBrowserChromium, Path=ClickToLoad}"/>
+                                        </b:EventTrigger>
+                                    </b:Interaction.Triggers>
+                                    <ListView.ItemTemplate>
+                                        <DataTemplate DataType="{x:Type m:HistoryEntry}">
+                                            <TextBlock Text="{Binding Url}" MaxWidth="{Binding ElementName=textBoxUrl, Path=ActualWidth}" TextTrimming="CharacterEllipsis"/>
+                                        </DataTemplate>
+                                    </ListView.ItemTemplate>
+                                </ListView>
+                            </md:Card>
+                        </Popup>
+                        <TextBox x:Name="textBoxUrl" Text="{Binding ElementName=tabBrowserChromium, Path=Address, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Margin="12 0 5 0">
+                            <b:Interaction.Triggers>
+                                <b:EventTrigger EventName="PreviewKeyDown">
+                                    <b:InvokeCommandAction Command="{Binding ElementName=tabBrowserChromium, Path=KeyPress}" EventArgsParameterPath="Key"/>
+                                </b:EventTrigger>
+                                <b:EventTrigger EventName="MouseDoubleClick">
+                                    <b:InvokeCommandAction Command="{Binding ElementName=tabBrowserChromium, Path=SelectAll}" CommandParameter="{Binding ElementName=textBoxUrl}"/>
+                                </b:EventTrigger>
+                                <b:EventTrigger EventName="GotFocus">
+                                    <b:InvokeCommandAction Command="{Binding ElementName=tabBrowserChromium, Path=OpenHistory}"/>
+                                </b:EventTrigger>
+                            </b:Interaction.Triggers>
+                            <TextBox.Style>
+                                <Style TargetType="TextBox" BasedOn="{StaticResource MaterialDesignTextBox}">
+                                    <Setter Property="md:TextFieldAssist.HasClearButton" Value="True"/>
+                                    <Setter Property="BorderBrush" Value="Transparent"/>
+                                    <Setter Property="BorderThickness" Value="0"/>
+                                    <Setter Property="MinWidth" Value="600"/>
+                                    <Setter Property="VerticalContentAlignment" Value="Center"/>
+                                    <Style.Triggers>
+                                        <Trigger Property="IsFocused" Value="True">
+                                            <Setter Property="BorderBrush" Value="{DynamicResource Primary.Dark}"/>
+                                        </Trigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </TextBox.Style>
+                        </TextBox>
+                    </DockPanel>
+                </Border>
+            </DockPanel>
+        </Grid>
+        <DockPanel>
+            <!--Debugger-->
+            <ContentPresenter DockPanel.Dock="Right" 
+                              x:Name="DebuggerContainer" 
+                              Content="{Binding ElementName=tabBrowserChromium, Path=Debugger}" 
+                              Width="{Binding ElementName=tabBrowserChromium, Path=DebuggerWidth}"
+                              Visibility="{Binding ElementName=tabBrowserChromium, Path=IsDebuggerOpen, Converter={StaticResource BooleanToVisibility}}"/>
+            <!--Scroll bar-->
+            <Track DockPanel.Dock="Right"  
+                   Orientation="Vertical" 
+                   Minimum="0" 
+                   Maximum="{Binding ElementName=gridChromium, Path=ActualHeight}"   
+                   Value="{Binding ElementName=tabBrowserChromium, Path=DebuggerHeight}"
+                   Visibility="{Binding ElementName=DebuggerContainer, Path=Visibility}" 
+                   DataContext="{Binding ElementName=tabBrowserChromium}">
+                <Track.Thumb>
+                    <Thumb Cursor="Hand">
+                        <b:Interaction.Triggers>
+                            <b:EventTrigger EventName="DragDelta">
+                                <b:InvokeCommandAction Command="{Binding ChangeDebuggerWidth}" EventArgsParameterPath="HorizontalChange"/>
+                                <b:InvokeCommandAction Command="{Binding ChangeDebuggerHeight}" EventArgsParameterPath="VerticalChange"/>
+                            </b:EventTrigger>
+                        </b:Interaction.Triggers>
+                        <Thumb.Template>
+                            <ControlTemplate TargetType="Thumb">
+                                <Border Width="20" Height="100" Background="{DynamicResource Primary.Light}" CornerRadius="5" Margin="2">
+                                    <UniformGrid Rows="3" Width="20" Height="15">
+                                        <UniformGrid.Resources>
+                                            <Style TargetType="Rectangle">
+                                                <Setter Property="Width" Value="16"/>
+                                                <Setter Property="Height" Value="2"/>
+                                                <Setter Property="HorizontalAlignment" Value="Center"/>
+                                                <Setter Property="VerticalAlignment" Value="Center"/>
+                                                <Setter Property="Fill" Value="{DynamicResource White.Dark}"/>
+                                            </Style>
+                                        </UniformGrid.Resources>
+                                        <Rectangle />
+                                        <Rectangle />
+                                        <Rectangle />
+                                    </UniformGrid>
+                                </Border>
+                            </ControlTemplate>
+                        </Thumb.Template>
+                    </Thumb>
+                </Track.Thumb>
+            </Track>
+
+            <!--Phần hiển thị nội dung của trang web-->
+            <Grid x:Name="gridChromium" Background="{DynamicResource Secondary.Dark}">
+                <md:Card x:Name="cardBlankTabAnimation" Margin="5">
+                    <Canvas x:Name="canvasAnimation" Height="800" Width="1200">
+                        <Ellipse Canvas.Left="300" Canvas.Top="50" Width="600" Height="{Binding RelativeSource={RelativeSource Self}, Path=ActualWidth}" StrokeThickness="0" Stroke="Navy" RenderTransformOrigin="0.5 0.5">
+                            <Ellipse.Fill>
+                                <DrawingBrush Stretch="Uniform">
+                                    <DrawingBrush.Drawing>
+                                        <DrawingGroup>
+                                            <GeometryDrawing >
+                                                <GeometryDrawing.Geometry>
+                                                    <EllipseGeometry Center="200 100" RadiusX="30" RadiusY="100"/>
+                                                </GeometryDrawing.Geometry>
+                                                <GeometryDrawing.Brush>
+                                                    <LinearGradientBrush StartPoint="0.5 0" EndPoint="0.5 1">
+                                                        <GradientStop Offset="0.5" Color="#DC1C13"/>
+                                                        <GradientStop Offset="0.85" Color="#FFD86F"/>
+                                                    </LinearGradientBrush>
+                                                </GeometryDrawing.Brush>
+                                            </GeometryDrawing>
+                                            <GeometryDrawing >
+                                                <GeometryDrawing.Geometry>
+                                                    <EllipseGeometry Center="200 300" RadiusX="30" RadiusY="100"/>
+                                                </GeometryDrawing.Geometry>
+                                                <GeometryDrawing.Brush>
+                                                    <LinearGradientBrush StartPoint="0.5 0" EndPoint="0.5 1">
+                                                        <GradientStop Offset="0" Color="#FFD86F"/>
+                                                        <GradientStop Offset="0.6" Color="#FC6262"/>
+                                                    </LinearGradientBrush>
+                                                </GeometryDrawing.Brush>
+                                            </GeometryDrawing>
+                                            <GeometryDrawing >
+                                                <GeometryDrawing.Geometry>
+                                                    <EllipseGeometry Center="100 200" RadiusX="100" RadiusY="30"/>
+                                                </GeometryDrawing.Geometry>
+                                                <GeometryDrawing.Brush>
+                                                    <LinearGradientBrush StartPoint="0 0.5" EndPoint="1 0.5">
+                                                        <GradientStop Offset="0.4" Color="#01C32C"/>
+                                                        <GradientStop Offset="0.85" Color="#FFD86F"/>
+                                                    </LinearGradientBrush>
+                                                </GeometryDrawing.Brush>
+                                            </GeometryDrawing>
+                                            <GeometryDrawing >
+                                                <GeometryDrawing.Geometry>
+                                                    <EllipseGeometry Center="300 200" RadiusX="100" RadiusY="30"/>
+                                                </GeometryDrawing.Geometry>
+                                                <GeometryDrawing.Brush>
+                                                    <LinearGradientBrush StartPoint="0 0.5" EndPoint="1 0.5">
+                                                        <GradientStop Offset="0.1" Color="#FFD86F"/>
+                                                        <GradientStop Offset="0.75" Color="#9BBF53"/>
+                                                    </LinearGradientBrush>
+                                                </GeometryDrawing.Brush>
+                                            </GeometryDrawing>
+                                            <GeometryDrawing >
+                                                <GeometryDrawing.Geometry>
+                                                    <EllipseGeometry Center="200 200" RadiusX="30" RadiusY="30"/>
+                                                </GeometryDrawing.Geometry>
+                                                <GeometryDrawing.Brush>
+                                                    <RadialGradientBrush Center="0.5 0.5" RadiusX="0.5" RadiusY="0.5" GradientOrigin="0.5 0.5">
+                                                        <GradientStop Offset="0" Color="#EDFFFD"/>
+                                                        <GradientStop Offset="0.5" Color="#BFE8FD"/>
+                                                        <GradientStop Offset="0.85" Color="#91D1FE"/>
+                                                    </RadialGradientBrush>
+                                                </GeometryDrawing.Brush>
+                                            </GeometryDrawing>
+                                        </DrawingGroup>
+                                    </DrawingBrush.Drawing>
+                                </DrawingBrush>
+                            </Ellipse.Fill>
+                            <Ellipse.RenderTransform>
+                                <RotateTransform Angle="0" />
+                            </Ellipse.RenderTransform>
+                            <Ellipse.Triggers>
+                                <EventTrigger RoutedEvent="Loaded">
+                                    <BeginStoryboard Name="BeginRotateEllipse">
+                                        <Storyboard >
+                                            <DoubleAnimation Storyboard.TargetProperty="RenderTransform.Angle"
+                                                 From="0"
+                                                 To="360"
+                                                 Duration="0:0:1"
+                                                 RepeatBehavior="Forever"/>
+                                        </Storyboard>
+                                    </BeginStoryboard>
+                                </EventTrigger>
+                                <EventTrigger RoutedEvent="Unloaded">
+                                    <StopStoryboard BeginStoryboardName="BeginRotateEllipse"/>
+                                </EventTrigger>
+                            </Ellipse.Triggers>
+                        </Ellipse>
+                        <ProgressBar Canvas.Left="300" Canvas.Top="50" Width="600" Height="600" Foreground="{DynamicResource Primary.Dark}" IsIndeterminate="True" Value="0" Style="{StaticResource MaterialDesignCircularProgressBar}"/>
+                        <Image Source="pack://siteoforigin:,,,/Images/icon.png" Canvas.Left="550" Canvas.Top="50" Width="100" RenderTransformOrigin="0.5 0.5">
+                            <Image.RenderTransform>
+                                <RotateTransform Angle="0"/>
+                            </Image.RenderTransform>
+                            <Image.Triggers>
+                                <EventTrigger RoutedEvent="Loaded">
+                                    <BeginStoryboard Name="BeginRotateImage">
+                                        <Storyboard>
+                                            <DoubleAnimation Storyboard.TargetProperty="RenderTransform.Angle"
+                                                             Duration="0:0:1"
+                                                             From="0"
+                                                             To="360"
+                                                             FillBehavior="Stop"
+                                                             RepeatBehavior="Forever"/>
+
+                                            <!--Animation sử dụng các thông tin X Y và Angle của geometry để sinh ra output-->
+                                            <DoubleAnimationUsingPath Storyboard.TargetProperty="(Canvas.Left)" 
+                                                                  Source="X"
+                                                                  Duration="0:0:4"  
+                                                                  FillBehavior="Stop"
+                                                                       RepeatBehavior="Forever">
+                                                <DoubleAnimationUsingPath.PathGeometry>
+                                                    <PathGeometry  Figures="M 600,50 A 300 300 1 1 1 599 50"  
+                                                               PresentationOptions:Freeze="True" />
+                                                </DoubleAnimationUsingPath.PathGeometry>
+                                            </DoubleAnimationUsingPath>
+                                            <DoubleAnimationUsingPath Storyboard.TargetProperty="(Canvas.Top)" 
+                                                                  Source="Y"
+                                                                  Duration="0:0:4"  
+                                                                  FillBehavior="Stop"
+                                                                       RepeatBehavior="Forever">
+                                                <DoubleAnimationUsingPath.PathGeometry>
+                                                    <PathGeometry  Figures="M 600,50 A 300 300 1 1 1 599 50"  
+                                                               PresentationOptions:Freeze="True" />
+                                                </DoubleAnimationUsingPath.PathGeometry>
+                                            </DoubleAnimationUsingPath>
+                                        </Storyboard>
+                                    </BeginStoryboard>
+                                </EventTrigger>
+                                <EventTrigger RoutedEvent="Unloaded">
+                                    <StopStoryboard BeginStoryboardName="BeginRotateImage"/>
+                                </EventTrigger>
+                            </Image.Triggers>
+                        </Image>
+                        <Canvas.Style>
+                            <Style TargetType="Canvas">
+                                <Setter Property="Visibility" Value="Collapsed"/>
+                                <Style.Triggers>
+                                    <MultiDataTrigger>
+                                        <MultiDataTrigger.Conditions>
+                                            <Condition Binding="{Binding ElementName=tabBrowserChromium, Path=Chromium.Address}" Value="about:blank"/>
+                                            <Condition Binding="{Binding Source={x:Static m:Settings.Current}, Path=IsBackgroundValid}" Value="False"/>
+                                        </MultiDataTrigger.Conditions>
+                                        <Setter Property="Visibility" Value="Visible"/>
+                                    </MultiDataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Canvas.Style>
+                    </Canvas>
+                </md:Card>
+
+                <Border x:Name="borderBackground">
+                    <Border.Style>
+                        <Style TargetType="Border">
+                            <Setter Property="Background" Value="Transparent"/>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding ElementName=tabBrowserChromium, Path=Chromium.Address}" Value="about:blank">
+                                    <Setter Property="Background" Value="{DynamicResource BlankTab.Background}"/>
+                                </DataTrigger>
+                                <DataTrigger Binding="{Binding ElementName=tabBrowserChromium, Path=Chromium.IsLoading}" Value="True">
+                                    <Setter Property="Background" Value="{DynamicResource BlankTab.Background}"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Border.Style>
+                </Border>
+
+                <StackPanel x:Name="stackError" HorizontalAlignment="Center" VerticalAlignment="Center" Visibility="{Binding ElementName=tabBrowserChromium, Path=HasError, Converter={StaticResource BooleanToVisibility}}">
+                    <Image Source="pack://siteoforigin:,,,/Images/icon.png" Width="100" HorizontalAlignment="Center"/>
+                    <TextBlock Text="{Binding ElementName=tabBrowserChromium, Path=ErrorCaption}" Foreground="{StaticResource DangerSolid}" HorizontalAlignment="Center" Margin="10"/>
+                    <TextBlock Text="{Binding ElementName=tabBrowserChromium, Path=ErrorMessage}" HorizontalAlignment="Center"/>
+                    <TextBlock Text="{Binding ElementName=tabBrowserChromium, Path=ErrorUrl}" ToolTip="{Binding RelativeSource={RelativeSource Self}, Path=Text}" MaxWidth="800" TextTrimming="CharacterEllipsis" HorizontalAlignment="Center"/>
+                </StackPanel>
+                
+                <!--Chromium-->
+                <ContentPresenter Content="{Binding ElementName=tabBrowserChromium, Path=Chromium}"/>
+
+                <TextBlock Text="{Binding ElementName=tabBrowserChromium, Path=HoverLink}" >
+                    <TextBlock.Style>
+                        <Style TargetType="TextBlock">
+                            <Setter Property="Background" Value="{DynamicResource Secondary.Light}"/>
+                            <Setter Property="VerticalAlignment" Value="Bottom"/>
+                            <Style.Triggers>
+                                <Trigger Property="Text" Value="">
+                                    <Setter Property="Background" Value="Transparent"/>
+                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                </Trigger>
+                            </Style.Triggers>
+                        </Style>
+                    </TextBlock.Style>
+                </TextBlock>
+                
+                <Slider Value="{Binding ElementName=tabBrowserChromium, Path=LoadingProgress}">
+                    <Slider.Style>
+                        <Style TargetType="Slider" BasedOn="{StaticResource MaterialDesignSlider}">
+                            <Setter Property="Minimum" Value="0"/>
+                            <Setter Property="Maximum" Value="1"/>
+                            <Setter Property="Width" Value="300"/>
+                            <Setter Property="Height" Value="20"/>
+                            <Setter Property="VerticalAlignment" Value="Bottom"/>
+                            <Setter Property="HorizontalAlignment" Value="Right"/>
+                            <Setter Property="Margin" Value="0 0 20 1"/>
+                            <Style.Triggers>
+                                <Trigger Property="Value" Value="0">
+                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                </Trigger>
+                                <Trigger Property="Value" Value="1">
+                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                </Trigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Slider.Style>
+                </Slider>
+                
+                <!--Find & Download-->
+                <Border Width="610" Height="60" HorizontalAlignment="Right" VerticalAlignment="Top" Visibility="{Binding ElementName=RightFillet, Path=Visibility}">
+                    <Border Height="50" Background="{DynamicResource Secondary.Dark}" HorizontalAlignment="Right" VerticalAlignment="Top" CornerRadius="0 0 0 10">
+                        <Grid>
+                            <StackPanel Orientation="Horizontal">
+                                <DockPanel x:Name="dockFind" Width="300" Visibility="{Binding ElementName=tabBrowserChromium, Path=IsFindingBarOpen, Converter={StaticResource BooleanToVisibility}}">
+                                    <Button DockPanel.Dock="Left" Content="{md:PackIcon Kind=ChevronUp}" Command="{Binding ElementName=tabBrowserChromium, Path=FindPrevious}"/>
+                                    <Button DockPanel.Dock="Right" Content="{md:PackIcon Kind=Close, Size=18}" Command="{Binding ElementName=tabBrowserChromium, Path=FindStop}"/>
+                                    <Button DockPanel.Dock="Right" Content="{md:PackIcon Kind=ChevronDown}" Command="{Binding ElementName=tabBrowserChromium, Path=FindNext}"/>
+                                    <Border Height="30"  Background="{Binding ElementName=textBoxFind, Path=BorderBrush}" CornerRadius="10 10 0 0">
+                                        <TextBox x:Name="textBoxFind" Text="{Binding ElementName=tabBrowserChromium, Path=FindText}">
+                                            <TextBox.Style>
+                                                <Style TargetType="TextBox" BasedOn="{StaticResource MaterialDesignTextBox}">
+                                                    <Setter Property="Background" Value="Transparent"/>
+                                                    <Setter Property="BorderThickness" Value="0"/>
+                                                    <Setter Property="BorderBrush" Value="{DynamicResource Secondary.Light}"/>
+                                                    <Style.Triggers>
+                                                        <Trigger Property="IsMouseOver" Value="True">
+                                                            <Setter Property="BorderBrush" Value="{DynamicResource White.Dark}"/>
+                                                        </Trigger>
+                                                        <Trigger Property="IsFocused" Value="True">
+                                                            <Setter Property="BorderBrush" Value="{DynamicResource White.Light}"/>
+                                                        </Trigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </TextBox.Style>
+                                        </TextBox>
+                                    </Border>
+                                </DockPanel>
+                                <DockPanel x:Name="dockDownload" Width="300" Visibility="{Binding ElementName=tabBrowserChromium, Path=IsDownloadBarOpen, Converter={StaticResource BooleanToVisibility}}">
+                                    <Button DockPanel.Dock="Left" x:Name="btnPauseDownload" Command="{Binding ElementName=tabBrowserChromium, Path=PauseDownload}">
+                                        <Button.Style>
+                                            <Style TargetType="Button" BasedOn="{StaticResource MaterialDesignIconButton}">
+                                                <Setter Property="Content" Value="II"/>
+                                                <Setter Property="ToolTip" Value="Pause"/>
+                                                <Setter Property="Width" Value="30"/>
+                                                <Setter Property="Height" Value="30"/>
+                                                <Setter Property="Background" Value="{DynamicResource Secondary.Dark}"/>
+                                                <Setter Property="ToolTipService.InitialShowDelay" Value="0"/>
+                                                <Setter Property="Padding" Value="0"/>
+                                                <Setter Property="Margin" Value="5"/>
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding ElementName=tabBrowserChromium, Path=CurrentDownload.IsPaused}" Value="True">
+                                                        <Setter Property="Content" Value="{md:PackIcon Kind=Play, Size=18}"/>
+                                                        <Setter Property="ToolTip" Value="Resume"/>
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </Button.Style>
+                                    </Button>
+                                    <Button DockPanel.Dock="Right" x:Name="btnCancelDownload" ToolTip="Cancel" Command="{Binding ElementName=tabBrowserChromium, Path=CancelDownload}" Background="{DynamicResource Secondary.Dark}" Foreground="{DynamicResource Primary.Dark}" Content="{md:PackIcon Kind=Close, Size=18}" Margin="5"/>
+                                    <Border >
+                                        <Grid >
+                                            <Grid.RowDefinitions>
+                                                <RowDefinition Height="2*"/>
+                                                <RowDefinition Height="*"/>
+                                                <RowDefinition Height="2*"/>
+                                            </Grid.RowDefinitions>
+                                            <Grid Grid.Row="0">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="2*"/>
+                                                    <ColumnDefinition Width="*"/>
+                                                </Grid.ColumnDefinitions>
+                                                <Grid.Resources>
+                                                    <Style TargetType="TextBlock">
+                                                        <Setter Property="FontSize" Value="12"/>
+                                                        <Setter Property="HorizontalAlignment" Value="Center"/>
+                                                        <Setter Property="VerticalAlignment" Value="Bottom"/>
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding ElementName=tabBrowserChromium, Path=CurrentDownload}" Value="{x:Null}">
+                                                                <Setter Property="Visibility" Value="Collapsed"/>
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </Grid.Resources>
+                                                <TextBlock x:Name="txblDownloadTotal" Grid.Column="0">
+                                                           <Run Text="{Binding ElementName=tabBrowserChromium, Path=CurrentDownload.ReceivedData}"/>
+                                                            <Run Text="/"/>
+                                                            <Run Text="{Binding ElementName=tabBrowserChromium, Path=CurrentDownload.TotalData}"/>
+                                                            <Run Text=" "/>
+                                                            <Run Text="{Binding ElementName=tabBrowserChromium, Path=CurrentDownload.DataUnit}"/>
+                                                </TextBlock>
+                                                <TextBlock x:Name="txblDownloadSpeed" Grid.Column="1">
+                                                           <Run Text="{Binding ElementName=tabBrowserChromium, Path=CurrentDownload.CurrentSpeed}"/>
+                                                            <Run Text=" "/>
+                                                            <Run Text="{Binding ElementName=tabBrowserChromium, Path=CurrentDownload.DataUnit}"/>
+                                                            <Run Text="/s"/>
+                                                </TextBlock>
+                                            </Grid>
+                                            <ProgressBar Grid.Row="1" x:Name="progressDownload" Minimum="0" Maximum="100" Value="{Binding ElementName=tabBrowserChromium, Path=CurrentDownload.PercentComplete}"/>
+                                            <TextBlock Grid.Row="2" x:Name="txblDownloadPath" Visibility="{Binding ElementName=txblDownloadTotal, Path=Visibility}" Cursor="Hand" Text="{Binding ElementName=tabBrowserChromium, Path=CurrentDownload.ShortPath}" ToolTip="{Binding RelativeSource={RelativeSource Self}, Path=Text}" Tag="{Binding ElementName=tabBrowserChromium, Path=CurrentDownload.FullPath}" FontSize="12" TextTrimming="CharacterEllipsis" >
+                                                <b:Interaction.Triggers>
+                                                    <b:EventTrigger EventName="MouseLeftButtonDown">
+                                                        <b:InvokeCommandAction Command="{Binding ElementName=tabBrowserChromium, Path=ShowInFolder}" CommandParameter="{Binding ElementName=txblDownloadPath, Path=Tag}"/>
+                                                    </b:EventTrigger> 
+                                                </b:Interaction.Triggers>
+                                            </TextBlock>
+                                        </Grid>
+                                    </Border>
+                                </DockPanel>
+                            </StackPanel>
+                            <Canvas>
+                                <Path x:Name="LeftFillet" 
+                                      Data="M 0 0 L 0 10 A 10 10 0 0 0 -10 0 Z"  
+                                      Fill="{DynamicResource Secondary.Dark}" 
+                                      Visibility="{Binding ElementName=RightFillet, Path=Visibility}"/>
+                                <Path x:Name="RightFillet" >
+                                    <Path.Style>
+                                        <Style TargetType="Path">
+                                            <Setter Property="Visibility" Value="Collapsed"/>
+                                            <Setter Property="Fill" Value="{DynamicResource Secondary.Dark}"/>
+                                            <Style.Triggers>
+                                                <MultiDataTrigger>
+                                                    <MultiDataTrigger.Conditions>
+                                                        <Condition Binding="{Binding Source={x:Reference dockFind}, Path=Visibility}" Value="{x:Static Visibility.Visible}"/>
+                                                        <Condition Binding="{Binding Source={x:Reference dockDownload}, Path=Visibility}" Value="{x:Static Visibility.Collapsed}"/>
+                                                    </MultiDataTrigger.Conditions>
+                                                    <Setter Property="Visibility" Value="Visible"/>
+                                                    <Setter Property="Data" Value="M 300 50 L 300 60 A 10 10 0 0 0 290 50 Z"/>
+                                                </MultiDataTrigger>
+                                                <MultiDataTrigger>
+                                                    <MultiDataTrigger.Conditions>
+                                                        <Condition Binding="{Binding Source={x:Reference dockFind}, Path=Visibility}" Value="{x:Static Visibility.Collapsed}"/>
+                                                        <Condition Binding="{Binding Source={x:Reference dockDownload}, Path=Visibility}" Value="{x:Static Visibility.Visible}"/>
+                                                    </MultiDataTrigger.Conditions>
+                                                    <Setter Property="Visibility" Value="Visible"/>
+                                                    <Setter Property="Data" Value="M 300 50 L 300 60 A 10 10 0 0 0 290 50 Z"/>
+                                                </MultiDataTrigger>
+                                                <MultiDataTrigger>
+                                                    <MultiDataTrigger.Conditions>
+                                                        <Condition Binding="{Binding Source={x:Reference dockFind}, Path=Visibility}" Value="{x:Static Visibility.Visible}"/>
+                                                        <Condition Binding="{Binding Source={x:Reference dockDownload}, Path=Visibility}" Value="{x:Static Visibility.Visible}"/>
+                                                    </MultiDataTrigger.Conditions>
+                                                    <Setter Property="Visibility" Value="Visible"/>
+                                                    <Setter Property="Data" Value="M 600 50 L 600 60 A 10 10 0 0 0 590 50 Z"/>
+                                                </MultiDataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Path.Style>
+                                </Path>
+                            </Canvas>
+                        </Grid>
+                    </Border>
+                </Border>
+
+                <Popup x:Name="popupTranslator"
+                       Placement="MousePoint"
+                       PopupAnimation="Slide" 
+                       AllowsTransparency="True"
+                       IsOpen="{Binding ElementName=tabBrowserChromium, Path=IsTranslatorOpen}">
+                    <Border Width="400" Height="300" Background="{DynamicResource White.Light}" BorderBrush="{DynamicResource Primary.Dark}" BorderThickness="1">
+                        <DockPanel>
+                            <DockPanel.Resources>
+                                <Style TargetType="ComboBox" BasedOn="{StaticResource MaterialDesignComboBox}">
+                                    <Setter Property="IsSynchronizedWithCurrentItem" Value="True"/>
+                                    <Setter Property="Foreground" Value="{DynamicResource Primary.Light}"/>
+                                </Style>
+                            </DockPanel.Resources>
+                            <Grid DockPanel.Dock="Top">
+                                <TextBlock Padding="30 8 0 8" Text="Translator" Background="{DynamicResource Secondary.Dark}"/>
+                                <md:PackIcon Kind="GoogleTranslate" HorizontalAlignment="Left" Width="30" Margin="1 8 0 8"/>
+                                <ToggleButton ToolTip="Close" HorizontalAlignment="Right" Background="Transparent" Foreground="{DynamicResource Primary.Dark}" md:ToggleButtonAssist.OnContent="{md:PackIcon Kind=Close}" IsChecked="{Binding ElementName=tabBrowserChromium, Path=IsTranslatorOpen}" Margin="2"/>
+                            </Grid>
+                            <ComboBox DockPanel.Dock="Top" ItemsSource="{Binding ElementName=tabBrowserChromium, Path=TranslatorSourceView}" SelectedValuePath="TwoLetterISOLanguageName" SelectedValue="en">
+                                <ComboBox.ItemTemplate>
+                                    <DataTemplate DataType="cul:CultureInfo">
+                                        <StackPanel Orientation="Horizontal">
+                                            <TextBlock Text="{Binding TwoLetterISOLanguageName}" Margin="8 0 15 0"/>
+                                            <TextBlock Text="{Binding NativeName}"/>
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </ComboBox.ItemTemplate>
+                            </ComboBox>
+                            <ComboBox DockPanel.Dock="Top" ItemsSource="{Binding ElementName=tabBrowserChromium, Path=TranslatorVoicesView}" SelectedValuePath="Name">
+                                <ComboBox.ItemTemplate>
+                                    <DataTemplate DataType="m:SpeechSynthesisVoice">
+                                        <StackPanel Orientation="Horizontal">
+                                            <TextBlock Text="{Binding Name}" Margin="8 0 5 0"/>
+                                            <TextBlock Text="{Binding Language, StringFormat={}({0})}"/>
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </ComboBox.ItemTemplate>
+                            </ComboBox>
+                            <Grid DockPanel.Dock="Top">
+                                <TextBox Padding="33 0 33 0" Text="{Binding ElementName=tabBrowserChromium, Path=TranslatorSourceText}"/>
+                                <Button ToolTip="Speak" Command="{Binding ElementName=tabBrowserChromium, Path=TranslatorSpeak}" HorizontalAlignment="Left" Content="{md:PackIcon Kind=VolumeHigh}" Margin="2"/>
+                                <Button ToolTip="Translate" Command="{Binding ElementName=tabBrowserChromium, Path=Translate}" HorizontalAlignment="Right" Content="{md:PackIcon Kind=Search}" Margin="2"/>
+                            </Grid>
+                            <ComboBox DockPanel.Dock="Top" ItemsSource="{Binding ElementName=tabBrowserChromium, Path=TranslatorTargetView}" SelectedValuePath="TwoLetterISOLanguageName" SelectedValue="vi">
+                                <ComboBox.ItemTemplate>
+                                    <DataTemplate DataType="cul:CultureInfo">
+                                        <StackPanel Orientation="Horizontal">
+                                            <TextBlock Text="{Binding TwoLetterISOLanguageName}" Margin="8 0 15 0"/>
+                                            <TextBlock Text="{Binding NativeName}"/>
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </ComboBox.ItemTemplate>
+                            </ComboBox>
+                            <Grid>
+                                <TextBox AcceptsReturn="True" Padding="8" Text="{Binding ElementName=tabBrowserChromium, Path=TranslatorTargetText}"/>
+                                <Button ToolTip="Swap" Command="{Binding ElementName=tabBrowserChromium, Path=TranslatorSwap}" HorizontalAlignment="Left" VerticalAlignment="Top" Content="{md:PackIcon Kind=SwapVertical}" Margin="2"/>
+                            </Grid>
+                        </DockPanel>
+                    </Border>
+                </Popup>
+            </Grid>
+        </DockPanel>
+    </DockPanel>
+</local:TabBrowserBase>
