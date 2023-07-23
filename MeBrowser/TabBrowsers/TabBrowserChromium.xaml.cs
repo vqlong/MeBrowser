@@ -2,34 +2,25 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Controls;
 using System.Windows.Media.Imaging;
 using System.Windows.Media;
 using System.Collections.ObjectModel;
 using MeBrowser.Model;
-using CefSharp;
 using MeBrowser.ChromiumComponents;
 using System.Windows.Data;
 using System.Windows.Input;
 using MeBrowser.ViewModel;
 using System.IO;
-using CefSharp.DevTools;
-using CefSharp.DevTools.Page;
 using System.Windows.Threading;
-using System.Threading;
-using MaterialDesignThemes.Wpf;
-using System.Windows.Documents;
 using System.Diagnostics;
 using System.Windows.Controls.Primitives;
 using System.Net.Http;
-using System.Net;
-using System.Drawing;
 using MeBrowser.Helpers;
-using System.Xml.Linq;
 using System.Globalization;
-using Microsoft.Windows.Themes;
+using CefSharp;
+using CefSharp.DevTools;
+using CefSharp.DevTools.Page;
 
 namespace MeBrowser.TabBrowsers
 {
@@ -293,7 +284,7 @@ namespace MeBrowser.TabBrowsers
             {
                 const utterThis = new SpeechSynthesisUtterance(text);
                 const voices = window.speechSynthesis.getVoices();
-  	            for (let i = 0; i < voices.length; i++) 
+  	            for (let i = 0; i < voices.length; i++)
                 {
                     if (voices[i].name === voiceName) 
     	            {
